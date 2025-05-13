@@ -229,8 +229,8 @@ print(torquesLE[0])
 plt.figure(figsize=(7, 5))
 
 # plt.subplot(1, 1, 1)
-plt.plot(time, torques[:, 0], label='Torque 1')
-plt.plot(time, torquesLE[:, 0], label='Torque 1 Input')
+plt.plot(time, torques[:, 0], 'b' , label='Torque 1')
+plt.plot(time, torquesLE[:, 0], 'r--', label='Torque 1 Input')
 # plt.plot(time, qdd_csv[:, 0], label='qdd input')
 plt.xlabel('Time (s)')
 plt.ylabel('Torque (Nm)')
@@ -269,3 +269,9 @@ plt.show()
 # forward simulation in matlab
 # compare theta, thetadot
 # write RNEA in matlab
+
+
+
+# double-link system
+# do forward simulation again for double link
+# theta1, theta1dot, 
