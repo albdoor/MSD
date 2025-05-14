@@ -11,13 +11,13 @@ def Uij(i, j, q, links):  # provides the integration matrix    TO BE CHECKED
         return 0
     else:
         theta, alpha, r, m, I, j_type, b = links[i]
-        if i == j and j == 0:
+        if (i == j) and (j == 0):
             u_deriv =  Q_mat() @ coord_transform_new(j-1, i, q, links)
             # print(u_deriv)
             return u_deriv
-        if (j == 0) and (i == 1):
-            u_deriv =  Q_mat() @ coord_transform_to_base(q, links, i)
-            return u_deriv
+        # if (j == 0) and (i == 1):
+        #     u_deriv =  Q_mat() @ coord_transform_to_base(q, links, i)
+        #     return u_deriv
         u_deriv = coord_transform_to_base(q, links, j-1) @ Q_mat() @ coord_transform_new(j-1, i, q, links)
         # print(u_deriv)
         return u_deriv
@@ -27,28 +27,14 @@ def Uijk(i, j, k, q, links):  # provides the double integration matrix   TO BE C
     if ((i < j) or (i < k)):
         return 0
     elif ((i >= k) and (k >= j)):
-        if (k == j):
-            if (k == i):
-                theta, alpha, r, m, I, j_type, b = links[i] 
-                uijk_deriv = coord_transform_to_base(q, links, j-1) @ Q_mat() @ Q_mat() @ coord_transform(q[i], r)
-                return uijk_deriv
-            uijk_deriv = coord_transform_to_base(q, links, j-1) @ Q_mat() @ Q_mat() @ coord_transform_to_base(q, links, i)
-            return uijk_deriv   
-    
         theta, alpha, r, m, I, j_type, b = links[i] 
-        uijk_deriv = coord_transform_to_base(q, links, j-1) @ Q_mat() @ coord_transform(q[k-1], r) @ Q_mat() @ coord_transform_to_base(q, links, i)
+        uijk_deriv = coord_transform_to_base(q, links, j-1) @ Q_mat() @ coord_transform_new(j-1, k-1, q, links) @ Q_mat() @ coord_transform_new(k-1, i, q, links)
         return uijk_deriv
     elif ((i >= j) and (j >= k)):
-        if (j == k):
-            if (j == i):
-                theta, alpha, r, m, I, j_type, b = links[i] 
-                uijk_deriv = coord_transform_to_base(q, links, k-1) @ Q_mat() @ Q_mat() @ coord_transform(q[i], r)
-                return uijk_deriv
-            uijk_deriv = coord_transform_to_base(q, links, k-1) @ Q_mat() @ Q_mat() @ coord_transform_to_base(q, links, i)
-            return uijk_deriv
         theta, alpha, r, m, I, j_type, b = links[i]     
-        uijk_deriv = coord_transform_to_base(q, links, k-1) @ Q_mat() @ coord_transform(q[j-1], r) @ Q_mat() @ coord_transform_to_base(q, links, i)
+        uijk_deriv = coord_transform_to_base(q, links, k-1) @ Q_mat() @ coord_transform_new(k-1, j-1, q, links) @ Q_mat() @ coord_transform_new(j-1, i, q, links)
         return uijk_deriv
+
 
 def d_func(i, k, links, q):
     sum = 0
@@ -120,7 +106,7 @@ def load_joint_data(npy_filename):
 
 
 def coord_transform_new(i, j, q, links):
-    if (j - i == 1):
+    if (abs(j - i) == 1):
         theta, alpha, r, m, I, j_type, b = links[j]
         return np.array([
             [np.cos(q[j]), -np.sin(q[j]), 0, r * np.cos(q[j])],
@@ -149,24 +135,27 @@ def coord_transform(theta, l):
 
 def coord_transform_to_base(q, links, link_idx):
     cumul_angle = 0
-    if (link_idx == -1):
-        R_direct = np.array([
+    res = np.array([
         [1, 0, 0, 0],
         [0, 1, 0, 0],
         [0, 0, 1, 0],
         [0, 0, 0, 1]
         ])
-        return R_direct
-    
-    if link_idx == 0:
-        theta, alpha, r, m, I, j_type, b = links[link_idx]
-        return coord_transform(q[link_idx], r)
-    
-    for i in range(link_idx):
-        theta, alpha, r, m, I, j_type, b = links[i]
-        if j_type == '1':
-            the = q[i]
-            cumul_angle += the
+
+    if (link_idx == -1):
+        return res
+        
+        
+    for j in range(link_idx + 1):
+        theta, alpha, r, m, I, j_type, b = links[j]
+        # print(j)
+        if j_type == 1:
+            # print(j)
+            res = res @ coord_transform_new(j - 1, j, q, links)
+    return res
+
+            # the = q[i]
+            # cumul_angle += the
     # R_direct = np.array([
     #     [np.cos(cumul_angle), -np.sin(cumul_angle), 0, l * (cos())],
     #     [np.sin(cumul_angle), np.cos(cumul_angle), 0],
@@ -213,30 +202,16 @@ def recLag(q, qd, qdd, links, gravity):
 
     i = 0
     for i in range(n):
+        h.append(h_func(i, links, q, qd))
+        c.append(c_func(i, links, gravity, q))
         for k in range(n):
             D.append(d_func(i, k, links, q))
     
     D = np.array(D).reshape((n, n))
-
-    i = 0
-    for i in range(n):
-        h.append(h_func(i, links, q, qd))
     
-    print(h)
     h = np.array(h).reshape((n, 1))
-    print("h matrix values=================================")
-    print(h)
-
-    i = 0
-    for i in range(n):
-        c.append(c_func(i, links, gravity, q))
     
     c = np.array(c).reshape((n, 1))
-    print("c matrix values *****************************************")
-    print(c)
-
-    print("D matrix values ---------------------------------")
-    print(D)
 
     tau = D @ np.array(qdd).reshape((n, 1)) + h + c
 
@@ -315,7 +290,7 @@ torquesLE = np.array(torquesLE)
 # Plot the torques
 
 print(np.cos(60))
-
+print(np.diag([1, 1, 1, 1]))
 plt.figure(figsize=(15, 5))
 
 
