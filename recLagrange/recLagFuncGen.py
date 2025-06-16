@@ -242,7 +242,25 @@ links = [
         [0, 0, 0, 0],
         [0, 0, 0, 0],
         [-0.5 * m2 * l2, 0, 0, m2],
-    ]), 1, 0.)   # Link 2
+    ]), 1, 0.),   # Link 2
+    (0, 0, l1, m1, np.array([
+        [1/3 * m1 * l1**2, 0, 0, -0.5 * m1 * l1],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [-0.5 * m1 * l1, 0, 0, m1],
+    ]), 1, 0.),
+    (0, 0, l1, m1, np.array([
+        [1/3 * m1 * l1**2, 0, 0, -0.5 * m1 * l1],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [-0.5 * m1 * l1, 0, 0, m1],
+    ]), 1, 0.),
+    (0, 0, l1, m1, np.array([
+        [1/3 * m1 * l1**2, 0, 0, -0.5 * m1 * l1],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [-0.5 * m1 * l1, 0, 0, m1],
+    ]), 1, 0.)
 ]
 
 time = np.linspace(0, 10, 1000)  # Time steps from 0 to 10 seconds
@@ -250,9 +268,9 @@ torques = []
 
 torquesLE = []
 
-n = 2
+n = 5
 
-q_csv, qd_csv, qdd_csv = load_joint_data('./data/planarDoublePend.csv', n, len(time) + 1)
+q_csv, qd_csv, qdd_csv = load_joint_data('./data/robot_dynamics_output.csv', n, len(time) + 1)
 print("Shape of q:", np.shape(q_csv))
 print("Shape of qd:", np.shape(qd_csv))
 print("Shape of qdd:", np.shape(qdd_csv))
