@@ -85,10 +85,10 @@ def c_func(i, links, g, q):
 
 
 def tau_input(t): # initial input used
-    return np.array([2 * np.sin(0.5 * t), 1.5 * np.cos(1.5 * t)])
+    return np.array([2 * np.sin(0.5 * t), 2 * np.sin(0.5 * t)])
 
 
-def load_joint_data(npy_filename, n, time_int):
+def load_joint_data(npy_filename, n, time_int, filetype):
     # data = np.load(npy_filename, allow_pickle=True)
     # data = data[0] if isinstance(data[0], list) else data
     # data = np.loadtxt(npy_filename, delimiter=',')
@@ -97,11 +97,16 @@ def load_joint_data(npy_filename, n, time_int):
     # qd = np.vstack((data[2], data[3])).T 
     # qdd = np.vstack((data[4], data[5])).T 
     # return q, qd, qdd
-    data = np.loadtxt(npy_filename, delimiter=',')
-    data = data.T
-    q = np.zeros((time_int, n))
-    qd = np.zeros((time_int, n))
-    qdd = np.zeros((time_int, n))
+    if filetype == 'csv':
+        data = np.loadtxt(npy_filename, delimiter=',', skiprows=1)
+        data = data.T
+    elif filetype == 'npy':
+        data = np.load(npy_filename, allow_pickle=True)
+        data = data[0] if isinstance(data[0], list) else data
+        q = np.vstack((data[0]))
+        qd = np.vstack((data[1])) 
+        qdd = np.vstack((data[2]))
+        return q, qd, qdd
 
     for i in range(n):
         q[:, i] = data[i]
@@ -117,7 +122,20 @@ def load_joint_data(npy_filename, n, time_int):
 
 
 def coord_transform_new(i, j, q, links):
-    if (abs(j - i) == 1):
+    '''
+    if (abs(j - i) > 1):
+        id_matr = np.array([
+        [1, 0, 0, 0],
+        [0, 1, 0, 0],
+        [0, 0, 1, 0],
+        [0, 0, 0, 1]
+        ])
+        theta, alpha, r, m, I, j_type, b = links[j]
+        for k in range(i, j):
+            id_matr = id_matr @ coord_transform_new(k, k + 1, q, links)
+        return id_matr
+    '''
+    if ((j - i) == 1): 
         theta, alpha, r, m, I, j_type, b = links[j]
         return np.array([
             [np.cos(q[j]), -np.sin(q[j]), 0, r * np.cos(q[j])],
@@ -125,6 +143,15 @@ def coord_transform_new(i, j, q, links):
             [0, 0, 1, 0],
             [0, 0, 0, 1]
         ])
+    elif j-i == -1:
+            theta, alpha, r, m, I, j_type, b = links[j]
+            return np.array([
+            [np.cos(q[j]), -np.sin(q[j]), 0, r * np.cos(q[j])],
+            [np.sin(q[j]), np.cos(q[j]), 0, r * np.sin(q[j])],
+            [0, 0, 1, 0],
+            [0, 0, 0, 1]
+        ]).T
+
     if (i == j):
         return np.array([
         [1, 0, 0, 0],
@@ -135,6 +162,9 @@ def coord_transform_new(i, j, q, links):
 
     if (i == -1):
         return coord_transform_to_base(q, links, j)  
+
+# j-i == 1 review
+# review the above function
 
 def coord_transform(theta, l):
     return np.array([
@@ -230,6 +260,7 @@ l1 = 1
 l2 = 1
 
 # Define the manipulator links: (theta, alpha, length, mass, inertia tensor, joint type: 0 - translational, 1 - rotational, damping coeff.)
+'''
 links = [
     (0, 0, l1, m1, np.array([
         [1/3 * m1 * l1**2, 0, 0, -0.5 * m1 * l1],
@@ -242,35 +273,58 @@ links = [
         [0, 0, 0, 0],
         [0, 0, 0, 0],
         [-0.5 * m2 * l2, 0, 0, m2],
+    ]), 1, 0.)
+]
+'''
+'''
+links = [
+    (0, 0, 1, 1, np.array([
+        [1/3 * m1 * l1**2, 0, 0, -0.5 * m1 * l1],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [-0.5 * m1 * l1, 0, 0, m1],
+    ]), 1, 0.),  # Link 1
+    (0, 0, 1, 1, np.array([
+        [1/3 * m2 * l2**2, 0, 0, -0.5 * m2 * l2],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [-0.5 * m2 * l2, 0, 0, m2],
     ]), 1, 0.),   # Link 2
-    (0, 0, l1, m1, np.array([
+    (0, 0, 1, 1, np.array([
         [1/3 * m1 * l1**2, 0, 0, -0.5 * m1 * l1],
         [0, 0, 0, 0],
         [0, 0, 0, 0],
         [-0.5 * m1 * l1, 0, 0, m1],
     ]), 1, 0.),
-    (0, 0, l1, m1, np.array([
+    (0, 0, 1, 1, np.array([
         [1/3 * m1 * l1**2, 0, 0, -0.5 * m1 * l1],
         [0, 0, 0, 0],
         [0, 0, 0, 0],
         [-0.5 * m1 * l1, 0, 0, m1],
     ]), 1, 0.),
-    (0, 0, l1, m1, np.array([
+    (0, 0, 1, 1, np.array([
         [1/3 * m1 * l1**2, 0, 0, -0.5 * m1 * l1],
         [0, 0, 0, 0],
         [0, 0, 0, 0],
         [-0.5 * m1 * l1, 0, 0, m1],
     ]), 1, 0.)
 ]
+'''
+links = [(0, 0, l1, m1, np.array([
+        [1/3 * m1 * l1**2, 0, 0, -0.5 * m1 * l1],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [-0.5 * m1 * l1, 0, 0, m1],
+    ]), 1, 0.)]
 
 time = np.linspace(0, 10, 1000)  # Time steps from 0 to 10 seconds
 torques = []
 
 torquesLE = []
 
-n = 5
+n = 1
 
-q_csv, qd_csv, qdd_csv = load_joint_data('./data/robot_dynamics_output.csv', n, len(time) + 1)
+q_csv, qd_csv, qdd_csv = load_joint_data('./data/singlelinkLE.npy', n, len(time), 'npy')
 print("Shape of q:", np.shape(q_csv))
 print("Shape of qd:", np.shape(qd_csv))
 print("Shape of qdd:", np.shape(qdd_csv))
@@ -279,8 +333,6 @@ print("Type of q:", type(q_csv))
 print("Type of qd:", type(qd_csv))
 print("Type of qdd:", type(qdd_csv))
 
-
-print(qdd_csv)
 
 # def random_q(t):
 #     return np.sin(t) + 0.5 * np.cos(0.5 * t)
@@ -331,8 +383,9 @@ plt.xlabel('Time (s)')
 plt.ylabel('Torque (Nm)')
 plt.legend()
 plt.title('Joint Torques Over Time')
+plt.show()
 
-
+'''
 plt.subplot(1, 2, 2)
 plt.plot(time, torques[:, 1], label='Torque 2')
 plt.plot(time, torquesLE[:, 1], '--r', label='Torque 2 Input')
@@ -341,8 +394,7 @@ plt.xlabel('Time (s)')
 plt.ylabel('Torque (Nm)')
 plt.legend()
 plt.title('Joint Torques Over Time')
-plt.show()
-
+'''
 
 
 
@@ -351,3 +403,17 @@ plt.show()
 # 5-link planar pendulum for both NE and LE
 # non-zero input (torque) only for the first link
 # zero for others
+
+
+# 27.06.25
+# 1 link system for NE and LE 
+# And then 2 link system 
+
+
+# two-link system
+# reduce the mass of 2nd link gradually
+# 1/2 of the 1sy mass, 1/4, and so forth
+# check the iteration of the link code
+# check the index notation
+# try debugging line-by-line
+# search in the internet 
