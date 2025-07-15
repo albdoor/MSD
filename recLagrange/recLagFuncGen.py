@@ -13,6 +13,9 @@ def Uij(i, j, q, links):  # provides the integration matrix    TO BE CHECKED
         theta, alpha, r, m, I, j_type, b = links[i]
         if (i == j) and (j == 0):
             u_deriv =  Q_mat() @ coord_transform_new(j-1, i, q, links)
+            print("-------------------- Passing through ----------------------")
+            print(coord_transform_new(j-1, i, q, links))
+            print(q[i])
             # print(u_deriv)
             return u_deriv
         # if (j == 0) and (i == 1):
@@ -47,7 +50,10 @@ def d_func(i, k, links, q):
         ujk = Uij(j, k, q, links)
 
         uji = Uij(j, i, q, links)
-  
+        print("-------------- Printing ujk and uji --------------------------------")
+
+        print(ujk)
+        print(uji)
         sum += np.trace(ujk @ inertia_tensor @ uji.T) 
     return sum
 
@@ -85,7 +91,7 @@ def c_func(i, links, g, q):
 
 
 def tau_input(t): # initial input used
-    return np.array([2 * np.sin(0.5 * t), 2 * np.sin(0.5 * t)])
+    return np.array([2 * np.sin(0.5 * t), 1.5 * np.cos(1.5 * t)])
 
 
 def load_joint_data(npy_filename, n, time_int, filetype):
@@ -100,6 +106,9 @@ def load_joint_data(npy_filename, n, time_int, filetype):
     if filetype == 'csv':
         data = np.loadtxt(npy_filename, delimiter=',', skiprows=1)
         data = data.T
+        q = np.zeros((time_int, n))
+        qd = np.zeros((time_int, n))
+        qdd = np.zeros((time_int, n))
     elif filetype == 'npy':
         data = np.load(npy_filename, allow_pickle=True)
         data = data[0] if isinstance(data[0], list) else data
@@ -135,6 +144,23 @@ def coord_transform_new(i, j, q, links):
             id_matr = id_matr @ coord_transform_new(k, k + 1, q, links)
         return id_matr
     '''
+    iden_matrix = np.array([
+        [1, 0, 0, 0],
+        [0, 1, 0, 0],
+        [0, 0, 1, 0],
+        [0, 0, 0, 1]
+        ])
+
+    if (i == j) or j == -1:
+        return iden_matrix
+    
+    
+    if (i == -1):
+        if i == j:
+            return iden_matrix
+        else :
+            return coord_transform_to_base(q, links, j)
+    
     if ((j - i) == 1): 
         theta, alpha, r, m, I, j_type, b = links[j]
         return np.array([
@@ -143,7 +169,7 @@ def coord_transform_new(i, j, q, links):
             [0, 0, 1, 0],
             [0, 0, 0, 1]
         ])
-    elif j-i == -1:
+    elif (abs(j)-abs(i)) == -1:
             theta, alpha, r, m, I, j_type, b = links[j]
             return np.array([
             [np.cos(q[j]), -np.sin(q[j]), 0, r * np.cos(q[j])],
@@ -152,16 +178,9 @@ def coord_transform_new(i, j, q, links):
             [0, 0, 0, 1]
         ]).T
 
-    if (i == j):
-        return np.array([
-        [1, 0, 0, 0],
-        [0, 1, 0, 0],
-        [0, 0, 1, 0],
-        [0, 0, 0, 1]
-        ])
+      
+    
 
-    if (i == -1):
-        return coord_transform_to_base(q, links, j)  
 
 # j-i == 1 review
 # review the above function
@@ -185,7 +204,15 @@ def coord_transform_to_base(q, links, link_idx):
 
     if (link_idx == -1):
         return res
-        
+
+    if (link_idx == 0):
+        theta, alpha, r, m, I, j_type, b = links[link_idx]
+        return np.array([
+            [np.cos(q[link_idx]), -np.sin(q[link_idx]), 0, r * np.cos(q[link_idx])],
+            [np.sin(q[link_idx]), np.cos(q[link_idx]), 0, r * np.sin(q[link_idx])],
+            [0, 0, 1, 0],
+            [0, 0, 0, 1]
+        ])
         
     for j in range(link_idx + 1):
         theta, alpha, r, m, I, j_type, b = links[j]
@@ -250,12 +277,15 @@ def recLag(q, qd, qdd, links, gravity):
 
     return tau
 
-
-
+# 11.07.25
+# try turning off variables D, h, c individually
+# figure out which matrix generates oscillations
+# run the 2, 3, 5 links system for LE, RNEA, based on the obtained data
+# 
 
 
 m1 = 1
-m2 = 1
+m2 = 0.001
 l1 = 1
 l2 = 1
 
@@ -324,7 +354,7 @@ torquesLE = []
 
 n = 1
 
-q_csv, qd_csv, qdd_csv = load_joint_data('./data/singlelinkLE.npy', n, len(time), 'npy')
+q_csv, qd_csv, qdd_csv = load_joint_data('./data/planarSinglePend2.csv', n, len(time), 'csv')
 print("Shape of q:", np.shape(q_csv))
 print("Shape of qd:", np.shape(qd_csv))
 print("Shape of qdd:", np.shape(qdd_csv))
@@ -348,7 +378,7 @@ gravity = np.array([[0, -g, 0, 0]])
 
 #range(2): 
 
-for t_idx in range(len(time)):
+for t_idx in range(1): #len(time)
     q = q_csv[t_idx]   # Joint positions from CSV
     qd = qd_csv[t_idx] # Joint velocities from CSV
     qdd = qdd_csv[t_idx] # Joint accelerations from CSV
@@ -383,9 +413,9 @@ plt.xlabel('Time (s)')
 plt.ylabel('Torque (Nm)')
 plt.legend()
 plt.title('Joint Torques Over Time')
-plt.show()
 
 '''
+
 plt.subplot(1, 2, 2)
 plt.plot(time, torques[:, 1], label='Torque 2')
 plt.plot(time, torquesLE[:, 1], '--r', label='Torque 2 Input')
@@ -395,6 +425,7 @@ plt.ylabel('Torque (Nm)')
 plt.legend()
 plt.title('Joint Torques Over Time')
 '''
+plt.show()
 
 
 
