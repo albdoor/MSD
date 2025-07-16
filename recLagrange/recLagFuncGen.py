@@ -248,6 +248,18 @@ def Q_mat():
         [0, 0, 0, 0]
     ])
 
+def plot_graphs(n, data1, data2):
+    plt.figure(figsize=(10, 5))
+    for i in range(n):
+        plt.subplot(1, i+1, i+1)    
+        plt.plot(time, data1[:, i], label='Torque 1')
+        plt.plot(time, data2[:, i], '--r', label='Torque 1 Input')
+        plt.xlabel('Time (s)')
+        plt.ylabel('Torque (Nm)')
+        plt.legend()
+        plt.title('Joint Torques Over Time')
+    plt.show()    
+
 
 
 
@@ -378,7 +390,7 @@ gravity = np.array([[0, -g, 0, 0]])
 
 #range(2): 
 
-for t_idx in range(1): #len(time)
+for t_idx in range(len(time)): #len(time)
     q = q_csv[t_idx]   # Joint positions from CSV
     qd = qd_csv[t_idx] # Joint velocities from CSV
     qdd = qdd_csv[t_idx] # Joint accelerations from CSV
@@ -391,9 +403,11 @@ torques = np.array(torques)
 torquesLE = np.array(torquesLE)
 
 
+
+plot_graphs(n, torques, torquesLE)
 # Plot the torques
 
-plt.figure(figsize=(15, 5))
+# plt.figure(figsize=(15, 5))
 
 
 # plt.subplot(1, 3, 1)
@@ -406,13 +420,13 @@ plt.figure(figsize=(15, 5))
 # plt.legend()
 # plt.title('Joint Torques Over Time')
 
-plt.subplot(1, 2, 1)
-plt.plot(time, torques[:, 0], label='Torque 1')
-plt.plot(time, torquesLE[:, 0], '--r', label='Torque 1 Input')
-plt.xlabel('Time (s)')
-plt.ylabel('Torque (Nm)')
-plt.legend()
-plt.title('Joint Torques Over Time')
+# plt.subplot(1, 2, 1)
+# plt.plot(time, torques[:, 0], label='Torque 1')
+# plt.plot(time, torquesLE[:, 0], '--r', label='Torque 1 Input')
+# plt.xlabel('Time (s)')
+# plt.ylabel('Torque (Nm)')
+# plt.legend()
+# plt.title('Joint Torques Over Time')
 
 '''
 
@@ -425,7 +439,7 @@ plt.ylabel('Torque (Nm)')
 plt.legend()
 plt.title('Joint Torques Over Time')
 '''
-plt.show()
+# plt.show()
 
 
 
