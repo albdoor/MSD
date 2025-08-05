@@ -1,5 +1,5 @@
 % number of links:
-n = 3;                          % edit this
+n = 2;                          % edit this
 param.n = n;
 % vectors of masses m, inertias J, link lengths l, and mass locations r:
 param.m = ones(param.n,1);      % edit these
@@ -9,8 +9,8 @@ param.r = param.l;              % edit these
 param.g = 9.81;
 
 % initial conditions (in radians), positive is counterclockwise
-thetas = [pi/2, pi/2, pi/2]';   % edit these
-dthetas = [0, 0, 0]';        % edit these
+thetas = [pi/2, pi/2]';   % edit these
+dthetas = [0, 0]';        % edit these
 vars0 = [thetas; dthetas];
 
 time_f = 10;                    % edit this

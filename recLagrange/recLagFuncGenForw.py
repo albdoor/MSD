@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+from scipy.integrate import solve_ivp
 import os
 print(os.getcwd())  # Print the current working directory
 print(os.listdir()) # List all files in the current directory
@@ -183,7 +184,7 @@ def coord_transform_new(i, j, q, links):
             [0, 0, 1, 0],
             [0, 0, 0, 1]
         ])
-        res[np.abs(res) < threshold] = 0.0
+        # res[np.abs(res) < threshold] = 0.0
         return res 
     elif (abs(j)-abs(i)) == -1:#check
             theta, alpha, r, m, I, j_type, b = links[j]
@@ -193,7 +194,7 @@ def coord_transform_new(i, j, q, links):
             [0, 0, 1, 0],
             [0, 0, 0, 1]
             ]).T
-            res[np.abs(res) < threshold] = 0.0
+            # res[np.abs(res) < threshold] = 0.0
             return res  
     elif (j-i > 1): #check
         res = np.eye(4)
@@ -211,7 +212,7 @@ def coord_transform_new(i, j, q, links):
             # print('----------------------------- Coordinate Transform -----------------------------------------------')
             # print(k)
             # print(res)
-        res[np.abs(res) < threshold] = 0.0
+        # res[np.abs(res) < threshold] = 0.0
         return res
 
 
@@ -250,7 +251,7 @@ def coord_transform_to_base(q, links, link_idx):
             [0, 0, 1, 0],
             [0, 0, 0, 1]
         ])
-        res[np.abs(res) < threshold] = 0.0
+        # res[np.abs(res) < threshold] = 0.0
         return res
     if (link_idx >= 1):
         for j in range(link_idx + 1):
@@ -265,7 +266,7 @@ def coord_transform_to_base(q, links, link_idx):
                 [0, 0, 0, 1]
             ])
                 res = res @ temp
-        res[np.abs(res) < threshold] = 0.0
+        # res[np.abs(res) < threshold] = 0.0
         return res
 
             # the = q[i]
@@ -283,7 +284,7 @@ def coord_transform_to_base(q, links, link_idx):
         [0, 0, 1, 0],
         [0, 0, 0, 1]
     ])
-    R_direct[np.abs(R_direct) < threshold] = 0.0
+    # R_direct[np.abs(R_direct) < threshold] = 0.0
     return R_direct
 
 
@@ -312,7 +313,7 @@ def plot_graphs(n, data1, data2):
 
 
 
-def recLag(q, qd, qdd, links, gravity):
+def recLag(q, qd, links, gravity):
     n = len(links)  # number of links
     tau = np.zeros(n)  # joint torques
     D = [] # D matrices
@@ -333,15 +334,35 @@ def recLag(q, qd, qdd, links, gravity):
     print(h)
     c = np.array(c).reshape((n, 1))
     print(c)
-    tau = D @ np.array(qdd).reshape((n, 1)) +  h + c
+    # tau = D @ np.array(qdd).reshape((n, 1)) +  h + c
 
-    return tau
+    return D, h ,c
+
+
+def dynamics(t, y):
+    theta = y[:n]
+    thetadot = y[n:]
+    
+    # Dmat = D(theta)
+    # hvec = h(theta, thetadot)
+    # cvec = c(theta)
+    # tauvec = tau(t)
+    Dmat, hvec, cvec = recLag(theta, thetadot, links, gravity)
+
+    theta_ddot = np.linalg.solve(Dmat, - hvec - cvec).flatten()
+
+    return np.concatenate([thetadot, theta_ddot])
+
+
 
 # 11.07.25
 # try turning off variables D, h, c individually
 # figure out which matrix generates oscillations
 # run the 2, 3, 5 links system for LE, RNEA, based on the obtained data
 # 
+
+
+
 
 
 m1 = 1
@@ -351,8 +372,11 @@ l2 = 1
 
 n = 3
 
+g = 9.81
+gravity = np.array([[0, -g, 0, 0]])
+
 # Define the manipulator links: (theta, alpha, length, mass, inertia tensor, joint type: 0 - translational, 1 - rotational, damping coeff.)
-'''
+
 links = [
     (0, 0, l1, m1, np.array([
         [1, 0, 0, 0],
@@ -365,9 +389,15 @@ links = [
         [0, 1, 0, 0],
         [0, 0, 1, 0],
         [0, 0, 0, 1],
+    ]), 1, 0.),
+    (0, 0, l2, m2, np.array([
+        [1, 0, 0, 0],
+        [0, 1, 0, 0],
+        [0, 0, 1, 0],
+        [0, 0, 0, 1],
     ]), 1, 0.)
 ]
-'''
+
 '''
 links = [
     (0, 0, l1, m1, np.array([
@@ -387,7 +417,7 @@ links = [
 
 '''
 
-
+'''
 links = [
     (0, 0, 1, 1, np.array([
         [1, 0, 0, 0],
@@ -409,6 +439,7 @@ links = [
     ]), 1, 0.)
 ]
 '''
+'''
 links = [(0, 0, l1, m1, np.array([
         [0, 0, 0, 0],
         [0, 0, 0, 0],
@@ -416,60 +447,57 @@ links = [(0, 0, l1, m1, np.array([
         [0, 0, 0, 0],
     ]), 1, 0.)]
 '''
-time = np.linspace(0, 10, 1000)  # Time steps from 0 to 10 seconds
-torques = []
+time = np.linspace(0, 10, 1001)  # Time steps from 0 to 10 seconds
 
-torquesLE = []
+t_span = (0, 10)
+n_steps = 1000
+t_eval = np.linspace(*t_span, n_steps)
 
+# Initial conditions: [theta1, theta2, theta1_dot, theta2_dot]
+y0 = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
 
-q_csv, qd_csv, qdd_csv = load_joint_data('./data/LEForw.csv', n, len(time), 'csv') # './providedForward/rl_multilink_simulation.csv'
-
-# './providedForwardMod/rl_multilink_simulation2.csv' , './data/planarDoublePend.csv'
-
-print("Shape of q:", np.shape(q_csv))
-print("Shape of qd:", np.shape(qd_csv))
-print("Shape of qdd:", np.shape(qdd_csv))
+sol = solve_ivp(dynamics, t_span, y0, t_eval=t_eval, method='RK45')
 
 
-print("Type of q:", type(q_csv))
-print("Type of qd:", type(qd_csv))
-print("Type of qdd:", type(qdd_csv))
+thetaddot = np.zeros((n, len(sol.t)))
+
+for i in range(len(sol.t)):
+    y_i = sol.y[:, i]
+    theta_i = y_i[0:n]
+    thetadot_i = y_i[n:n+n]
+    Dmat_i, hvec_i, cvec_i = recLag(theta_i, thetadot_i, links, gravity)
+    thetaddot[:, i] = np.linalg.solve(Dmat_i, - hvec_i - cvec_i).flatten()
 
 
-# def random_q(t):
-#     return np.sin(t) + 0.5 * np.cos(0.5 * t)
+print(np.shape(sol.y[0]))
+print(np.shape(thetaddot))
 
-# def random_qd(t):
-#     return np.cos(t) - 0.25 * np.sin(0.5 * t)
-
-# def random_qdd(t):
-#     return -np.sin(t) - 0.125 * np.cos(0.5 * t)
-
-g = 9.81
-gravity = np.array([[0, -g, 0, 0]])
-
-#range(2): 
-
-for t_idx in range(len(time)): #len(time)
-    q = q_csv[t_idx]   # Joint positions from CSV
-    qd = qd_csv[t_idx] # Joint velocities from CSV
-    qdd = qdd_csv[t_idx] # Joint accelerations from CSV
-    print('********************************************************* Start of the Program *********************************************************')
-    torque = recLag(q, qd, qdd, links, gravity)  # Compute torques using RNEA
-    torques.append(torque)
-    torque2 = tau_input(time[t_idx])
-    torquesLE.append(torque2)
-
-torques = np.array(torques)
-torquesLE = np.array(torquesLE)
-
-torques[np.abs(torques) < threshold] = 0.0
-torquesLE[np.abs(torquesLE) < threshold] = 0.0
+plt.plot(sol.t, thetaddot[0, :], label='θ₁')
+plt.plot(sol.t, thetaddot[1, :], label='θ₂')
+plt.plot(sol.t, thetaddot[2, :], label='θ3')
+plt.xlabel('Time [s]')
+plt.ylabel('Angle [rad]')
+plt.title('Forward Dynamics Simulation')
+plt.legend()
+plt.grid()
+plt.show()
 
 
+data = np.vstack([
+    sol.y[0], sol.y[1], sol.y[2],       # theta1, theta2
+    sol.y[3], sol.y[4], sol.y[5],       # thetadot1, thetadot2
+    thetaddot[0], thetaddot[1], thetaddot[2]   # thetaddot1, thetaddot2
+]).T  # Transpose to shape (n_points, 7)
 
+# Create DataFrame
+df = pd.DataFrame(data, columns=[
+    "theta1", "theta2", "theta3",
+    "thetadot1", "thetadot2", "thetadot3",
+    "thetaddot1", "thetaddot2", "thetaddot3"
+])
 
-plot_graphs(n, torquesLE, torques)
+# Save to CSV
+df.to_csv("./data/LEForw.csv", index=False)
 # Plot the torques
 
 # plt.figure(figsize=(15, 5))

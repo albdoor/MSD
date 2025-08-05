@@ -5,6 +5,7 @@ function dvrs = rl_absolute_ode(t,vars,param)
     C = zeros(n);
     G = zeros(n,1);
     lam = @(ind,k) l(ind)*(k>ind) + r(ind)*(1-(k>ind));
+    tau = [2 * sin(0.5 * t), 1.5 * cos(1.5 * t)]';
     for i=1:n
         for j=1:n
             mksum = 0;

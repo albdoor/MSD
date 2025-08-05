@@ -5,6 +5,7 @@ function dvrs = rl_relative_ode(t,vars,param)
     C = zeros(n);
     G = zeros(n,1);
     J = zeros(n);
+    %tau = [2 * sin(0.5 * t), 1.5 * cos(1.5 * t)]';
     for i=1:n
         for j=1:n
             mksum = 0;
