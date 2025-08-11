@@ -104,7 +104,7 @@ def c_func(i, links, g, q):
 
 
 def tau_input(t): # initial input used
-    return np.array([0, 0, 0]) # 2 * np.sin(0.5 * t), 1.5 * np.cos(1.5 * t)
+    return np.array([0, 0.1 * np.sin(1.5 * t), 0.075 * np.cos(2 * t)]) # 2 * np.sin(0.5 * t), 1.5 * np.cos(1.5 * t)
 
 
 def load_joint_data(npy_filename, n, time_int, filetype):
@@ -346,10 +346,11 @@ def dynamics(t, y):
     # Dmat = D(theta)
     # hvec = h(theta, thetadot)
     # cvec = c(theta)
-    # tauvec = tau(t)
+    tauvec = np.array(tau_input(t)).reshape((n, 1))
+
     Dmat, hvec, cvec = recLag(theta, thetadot, links, gravity)
 
-    theta_ddot = np.linalg.solve(Dmat, - hvec - cvec).flatten()
+    theta_ddot = np.linalg.solve(Dmat, tauvec - hvec - cvec).flatten()
 
     return np.concatenate([thetadot, theta_ddot])
 
@@ -465,8 +466,9 @@ for i in range(len(sol.t)):
     y_i = sol.y[:, i]
     theta_i = y_i[0:n]
     thetadot_i = y_i[n:n+n]
+    tauvec_i = np.array(tau_input(sol.t[i])).reshape((n, 1))
     Dmat_i, hvec_i, cvec_i = recLag(theta_i, thetadot_i, links, gravity)
-    thetaddot[:, i] = np.linalg.solve(Dmat_i, - hvec_i - cvec_i).flatten()
+    thetaddot[:, i] = np.linalg.solve(Dmat_i, tauvec_i - hvec_i - cvec_i).flatten()
 
 
 print(np.shape(sol.y[0]))

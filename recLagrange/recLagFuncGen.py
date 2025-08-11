@@ -103,7 +103,8 @@ def c_func(i, links, g, q):
 
 
 def tau_input(t): # initial input used
-    return np.array([0, 0, 0]) # 2 * np.sin(0.5 * t), 1.5 * np.cos(1.5 * t)
+    return np.array([0, 0.1 * np.sin(1.5 * t), 0.075 * np.cos(2 * t)]) # 2 * np.sin(0.5 * t), 1.5 * np.cos(1.5 * t)
+
 
 
 def load_joint_data(npy_filename, n, time_int, filetype):
@@ -556,3 +557,6 @@ plt.title('Joint Torques Over Time')
 # gammai = {1, 0}
 # General NE
 # 
+
+# 6.08.25
+# Rec NE general case
