@@ -409,6 +409,9 @@ links = [
         [0, 0, 0, m1],
     ]), 1, 0.)
 ]
+
+
+
 '''
 links = [(0, 0, l1, m1, np.array([
         [0, 0, 0, 0],
@@ -423,7 +426,7 @@ torques = []
 torquesLE = []
 
 
-q_csv, qd_csv, qdd_csv = load_joint_data('./data/LEForw.csv', n, len(time), 'csv') # './providedForward/rl_multilink_simulation.csv'
+q_csv, qd_csv, qdd_csv = load_joint_data('./data/LEForw3.csv', n, len(time), 'csv') # './providedForward/rl_multilink_simulation.csv'
 
 # './providedForwardMod/rl_multilink_simulation2.csv' , './data/planarDoublePend.csv'
 

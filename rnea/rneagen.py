@@ -7,7 +7,7 @@ print(os.listdir()) # List all files in the current directory
 threshold = 1e-13
 
 def tau_input(t):
-    return np.array([0, 0.1 * np.sin(1.5 * t), 0.075 * np.cos(2 * t)]) # 2 * np.sin(0.5 * t), 1.5 * np.cos(1.5 * t)
+    return np.array([0, 0 * np.sin(1.5 * t), 0 * np.cos(2 * t)]) # , 0.075 * np.cos(2 * t)
 
 def load_joint_data(npy_filename, n, time_int, filetype):
     if filetype == 'csv':
@@ -30,7 +30,6 @@ def load_joint_data(npy_filename, n, time_int, filetype):
         q[:, i] = data[i]
 
     for i in range(n, 2 * n):
-        print(i)
         qd[:, i - n] = data[i]
 
     for i in range(2 * n, 3 * n):
@@ -65,31 +64,13 @@ def rotation_matrix_to_base(q, links, link_idx):
             if j_type == 1:
                 # print(j)
                 temp = np.array([
-            [np.cos(q[link_idx]), -np.sin(q[link_idx]), 0],
-            [np.sin(q[link_idx]), np.cos(q[link_idx]), 0],
-            [0, 0, 1]
-            ])
+                    [np.cos(q[link_idx]), -np.sin(q[link_idx]), 0],
+                    [np.sin(q[link_idx]), np.cos(q[link_idx]), 0],
+                    [0, 0, 1]
+                ])
                 res = res @ temp
         res[np.abs(res) < threshold] = 0.0
         return res
-
-            # the = q[i]
-            # cumul_angle += the
-    # R_direct = np.array([
-    #     [np.cos(cumul_angle), -np.sin(cumul_angle), 0, l * (cos())],
-    #     [np.sin(cumul_angle), np.cos(cumul_angle), 0],
-    #     [0, 0, 1]
-    # ])
-    # Return the direct calculation (more efficient)
-    l = 1
-    R_direct = np.array([
-        [np.cos(cumul_angle), -np.sin(cumul_angle), 0, l * (np.cos(cumul_angle) + np.cos(q[0]))],
-        [np.sin(cumul_angle), np.cos(cumul_angle), 0, l * (np.sin(cumul_angle) + np.sin(q[0]))],
-        [0, 0, 1, 0],
-        [0, 0, 0, 1]
-    ])
-    R_direct[np.abs(R_direct) < threshold] = 0.0
-    return R_direct
 
 
 
@@ -143,19 +124,20 @@ def rotation_matrix(i, j, q, links):
             res = res @ temp
             # print('----------------------------- Coordinate Transform -----------------------------------------------')
             # print(k)
-            # print(res)
+            # print(res)    
         res[np.abs(res) < threshold] = 0.0
         return res
 
 
-def s_vector(theta, l):
+def s_vector(q, l):
        return np.array([[-l/2], [0], [0]]) 
 
-def p_star_vector(theta, l):
-    return np.array([[l], [0], [0]]) 
-
-def p_star_vector_mod(l, q):
-    return np.array([[l * np.cos(q)], [-l * np.sin(q)], [0]]) 
+def p_star_vector(q, l, i, j):
+    if (i == j):
+        return np.array([[l], [0], [0]])
+    if (i - j == 1):
+        res = (rotation_matrix(i-1, i, q, links).T) @ p_star_vector(q, l, j, j)
+        return res 
 
 
 def rnea(q, qd, qdd, links, gravity):
@@ -174,37 +156,52 @@ def rnea(q, qd, qdd, links, gravity):
     s_bar = []
     for i in range(n):
         theta, alpha, r, m, I, j_type, b = links[i]
-        R.append(rotation_matrix(i, i+1, q, links))
+        print('======================= Main Loop ==================================')
+        R.append(rotation_matrix(i - 1, i, q, links))
+        print(R[i])
         # print(R[i])
-        Rbase.append(rotation_matrix_to_base(q, links, len(links)))
-        p_star.append(p_star_vector(q, r))
-        s_bar.append(s_vector(q, r))
+        Rbase.append(rotation_matrix_to_base(q, links, i))
+        print(Rbase[i])
+        p_star.append(p_star_vector(q, r, i, i))
+        print(p_star[i])
+        s_bar.append(s_vector(q[i], r))
+        print(s_bar[i])
         if i == 0:
             if (j_type):
-                omega[i] =  R[i].T @ np.array([0, 0, qd[i]])
-                omegad[i] = R[i].T @ np.array([0, 0, qdd[i]])
-                vd[i] = np.cross(omegad[i], p_star[i].T) + np.cross(omega[i], np.cross(omega[i], p_star[i].T)) + R[i].T @ gravity
+                omega[i] =  (R[i].T @ np.array([[0], [0], [qd[i]]])).reshape((3, ))
+                omegad[i] = (R[i].T @ np.array([[0], [0], [qdd[i]]])).reshape((3, ))
+                vd[i] = (np.cross(omegad[i], (p_star[i]).T) + np.cross(omega[i], np.cross(omega[i], p_star[i].T)) + R[i].T @ gravity).reshape((3, ))
+                print('--------------------- i == 0 Case ---------------------------')
+                print(omega[i])
+                print(omegad[i])
+                print(vd[i])
+
             else:   
                 omega[i] = np.zeros(3)
                 omegad[i] = np.zeros(3)
-                vd[i] = gravity + R[i] @ np.array([qdd[i], 0, 0])  # Motion along joint axis
+                vd[i] = gravity + R[i] @ np.array([[qdd[i]], [0], [0]])  # Motion along joint axis
                     
             # print(vd[i])
         else:
             if (j_type):
-                omega[i] = R[i].T @ omega[i - 1] + np.array([0, 0, qd[i]]) #check
-                omegad[i] = R[i].T @ (omegad[i - 1] + np.cross(omega[i-1], np.array([0, 0, qd[i]])) + np.array([0, 0, qdd[i]])) #check
-                vd[i] = R[i].T @ vd[i - 1] + np.cross(omegad[i], p_star[i].T) + np.cross(omega[i], np.cross(omega[i], p_star[i].T)) #check
+                print('-------------------------- i > 1 Case ------------------------------')
+                omega[i] = (R[i].T @ (omega[i - 1] + np.array([0, 0, qd[i]]))).reshape((3, )) #check
+                omegad[i] = (R[i].T @ (omegad[i - 1] + np.cross(omega[i-1], np.array([0, 0, qd[i]])) + np.array([0, 0, qdd[i]])).reshape((3, ))) #check
+                vd[i] = (R[i].T @ vd[i - 1] + np.cross(omegad[i], (p_star[i]).T) + np.cross(omega[i], np.cross(omega[i], (p_star[i]).T))).reshape((3, )) #check
+                print(omega[i])
+                print(omegad[i])
+                print(vd[i])
             else:
                 omega[i] = R[i - 1] @ omega[i - 1]  # No angular motion
                 omegad[i] = R[i - 1] @ omegad[i - 1]
-                vd[i] = R[i - 1] @ vd[i - 1] + R[i] @ np.array([qdd[i], 0, 0])
-        a_c[i] = np.cross(omegad[i],  s_bar[i].T) + np.cross(omega[i],  np.cross(omega[i],  s_bar[i].T)) + vd[i]
+                vd[i] = R[i - 1] @ vd[i - 1] + R[i] @ np.array([[qdd[i]], [0], [0]])
+        a_c[i] = np.cross(omegad[i],  (s_bar[i]).T) + np.cross(omega[i],  np.cross(omega[i],  (s_bar[i]).T)) + vd[i]
+        print(a_c[i])
     # Backward recursion: force & torque propagation
     F = np.zeros((n, 3))  # Force
     N = np.zeros((n, 3))  # Torque
     f = [np.zeros(3) for _ in range(n + 1)]  # Force on each link
-    n_torque = [np.zeros(3) for _ in range(n + 1)]  # Torque on each link
+    n_torque = [np.zeros(3) for _ in range(n + 1)]  # To    rque on each link
     tau = np.zeros(n)  # Joint torques
     
     for i in reversed(range(n)):
@@ -212,25 +209,31 @@ def rnea(q, qd, qdd, links, gravity):
         print(i)
         if i == n-1:
             F[i] = m * a_c[i]
-            N[i] = np.dot(Rbase[i] @ I @ Rbase[i].T, omegad[i]) + np.cross(omega[i], np.dot(Rbase[i] @ I @ Rbase[i].T, omega[i]))
+            N[i] = np.dot(Rbase[i].T @ I @ Rbase[i], omegad[i]) + np.cross(omega[i], np.dot(Rbase[i].T @ I @ Rbase[i], omega[i]))
             f[i] = F[i]
-            n_torque[i] = np.cross(p_star[i].T + s_bar[i].T, F[i]) + N[i]
+            print('------------------ Passing Through i = n - 1 -------------------------------------')
+            n_torque[i] = np.cross((p_star[i]).T + (s_bar[i]).T, F[i]) + N[i]
+            print(f[i])
+            print(n_torque[i])
         else: 
             # Compute force: F = m * a
             # Compute torque: N = I * ω + ω × (I * ω)
             # Propagate force: f_i = R_{i+1} * f_{i+1} + F_i
+            print('----------------- Passing Through i < n - 1 -------------------------------')
             F[i] = m * a_c[i]
-            N[i] = np.dot(Rbase[i] @ I @ Rbase[i].T, omegad[i]) + np.cross(omega[i], np.dot(Rbase[i] @ I @ Rbase[i].T, omega[i]))
+            N[i] = np.dot(Rbase[i].T @ I @ Rbase[i], omegad[i]) + np.cross(omega[i], np.dot(Rbase[i].T @ I @ Rbase[i], omega[i]))
 
             # Propagate torque: n_i = R_{i+1} * n_{i+1} + (p_i × f_i) + N_i
             f[i] = R[i+1] @ f[i+1] + F[i]
-            n_torque[i] = R[i+1] @ (n_torque[i+1] + np.cross(p_star_vector_mod(r, q[i+1]).T, f[i+1])).T + (np.cross(p_star[i].T + s_bar[i].T, F[i]) + N[i]).T
-            print(n_torque[i].shape)
+
+
+            n_torque[i] = (R[i+1] @ (n_torque[i+1] + np.cross((p_star_vector(q, r, i+1, i)).T, f[i+1])).T + (np.cross((p_star[i]).T + (s_bar[i]).T, F[i]) + N[i]).T).reshape(3, )
+
             # Compute joint torque
         if j_type == 1:
-            print(n_torque[i].shape)
-            print(n_torque[i].reshape(3,))
+            print('--------------------- Passing Through ---------------------------------------')
             tau[i] = np.dot(n_torque[i].reshape(3,), R[i].T @ np.array([0, 0, 1]).T) + b * qd[i]
+            print(tau[i])
         else:  # Prismatic
             tau[i] = np.dot(f[i], R[i].T @ np.array([0, 0, 1])) + b * qd[i]    
     
@@ -238,11 +241,35 @@ def rnea(q, qd, qdd, links, gravity):
     
     return tau
 
+
+
+
+def plot_graphs(n, data1, data2):
+    plt.figure(figsize=(10, 5))
+    for i in range(n):
+        plt.subplot(1, n, i+1)    
+        plt.plot(time, data1[:, i], label=f'Torque {i+1} Input')
+        plt.plot(time, data2[:, i], '--r', label=f'Torque {i+1}')
+        plt.xlabel('Time (s)')
+        plt.ylabel('Torque (Nm)')
+        plt.legend()
+        plt.title('Joint Torques Over Time')
+    plt.show()    
+
+
 # Define the manipulator links: (theta, alpha, length, mass, inertia tensor, joint type: 0 - translational, 1 - rotational, damping coeff.)
-n = 2
+n = 3
+
+# links = [
+#     (0, 0, 1.0, 1.0, np.diag([1, 1, 1]), 1, 0.),  # Link 1
+#     (0, 0, 1.0, 1.0, np.diag([1, 1, 1]), 1, 0.)      # Link 2
+# ]
+
+
 links = [
-    (0, 0, 1.0, 1.0, np.diag([0.0, 1, 1]), 1, 0.),  # Link 1
-    (0, 0, 1.0, 1.0, np.diag([0.0, 1, 1]), 1, 0.)   # Link 2
+    (0, 0, 1.0, 1.0, np.diag([1, 1, 1]), 1, 0.),  # Link 1
+    (0, 0, 1.0, 1.0, np.diag([1, 1, 1]), 1, 0.),
+    (0, 0, 1.0, 1.0, np.diag([1, 1, 1]), 1, 0.)      # Link 2
 ]
 
 time = np.linspace(0, 10, 1000)  # Time steps from 0 to 10 seconds
@@ -250,7 +277,9 @@ torques = []
 
 torquesLE = []
 
-q_csv, qd_csv, qdd_csv = load_joint_data('./data/LEForw.csv', n, len(time), 'csv') # './providedForward/rl_multilink_simulation.csv'
+q_csv, qd_csv, qdd_csv = load_joint_data('./data/LEForw3.csv', n, len(time), 'csv') # './providedForward/rl_multilink_simulation.csv' './data/LEForw.csv'
+# './providedForwardMod/rl_multilink_simulation2.csv'
+
 print("Shape of q:", np.shape(q_csv))
 print("Shape of qd:", np.shape(qd_csv))
 print("Shape of qdd:", np.shape(qdd_csv))
@@ -271,7 +300,7 @@ print("Type of qdd:", type(qdd_csv))
 g = 9.81
 gravity = np.array([0, g, 0])
 
-for t_idx in range(len(time)):
+for t_idx in range(len(time)): #len(time)
     q = q_csv[t_idx]   # Joint positions from CSV
     qd = qd_csv[t_idx] # Joint velocities from CSV
     qdd = qdd_csv[t_idx] # Joint accelerations from CSV
@@ -286,39 +315,7 @@ torquesLE = np.array(torquesLE)
 
 # Plot the torques
 
-
-plt.figure(figsize=(15, 5))
-
-
-plt.subplot(1, 3, 1)
-plt.plot(time, torques[:, 0], '--b', label='Torque 1')
-plt.plot(time, torquesLE[:, 0], label='Torque 1 Input')
-plt.plot(time, torques[:, 1], '--g', label='Torque 2')
-plt.plot(time, torquesLE[:, 1], label='Torque 2 Input')
-plt.xlabel('Time (s)')
-plt.ylabel('Torque (Nm)')
-plt.legend()
-plt.title('Joint Torques Over Time')
-
-plt.subplot(1, 3, 2)
-plt.plot(time, torques[:, 0], label='Torque 1')
-plt.plot(time, torquesLE[:, 0], '--r', label='Torque 1 Input')
-plt.xlabel('Time (s)')
-plt.ylabel('Torque (Nm)')
-plt.legend()
-plt.title('Joint Torques Over Time')
-
-
-plt.subplot(1, 3, 3)
-plt.plot(time, torques[:, 1], label='Torque 2')
-plt.plot(time, torquesLE[:, 1], '--r', label='Torque 2 Input')
-# plt.plot(time, q_csv[:, 1], label='q2')
-plt.xlabel('Time (s)')
-plt.ylabel('Torque (Nm)')
-plt.legend()
-plt.title('Joint Torques Over Time')
-plt.show()
-
+plot_graphs(n, torquesLE, torques)
 
 
 # Add options for the joints
@@ -341,3 +338,8 @@ plt.show()
 
 # 5 link system with varying joint types, same mass, length, I
 # recursive lagrangian 
+
+
+# 15.08.25
+# check the indices
+# send the code

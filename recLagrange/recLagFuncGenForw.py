@@ -104,7 +104,7 @@ def c_func(i, links, g, q):
 
 
 def tau_input(t): # initial input used
-    return np.array([0, 0.1 * np.sin(1.5 * t), 0.075 * np.cos(2 * t)]) # 2 * np.sin(0.5 * t), 1.5 * np.cos(1.5 * t)
+    return np.array([0.1 * np.sin(np.pi/3 * t), 0 * np.sin(1.5 * t), 0 * np.cos(2 * t)]) # 0.075 * np.cos(2 * t)
 
 
 def load_joint_data(npy_filename, n, time_int, filetype):
@@ -378,6 +378,25 @@ gravity = np.array([[0, -g, 0, 0]])
 
 # Define the manipulator links: (theta, alpha, length, mass, inertia tensor, joint type: 0 - translational, 1 - rotational, damping coeff.)
 
+
+# links = [
+#     (0, 0, l1, m1, np.array([
+#         [1, 0, 0, 0],
+#         [0, 1, 0, 0],
+#         [0, 0, 1, 0],
+#         [0, 0, 0, 1],
+#     ]), 1, 0.),  # Link 1
+#     (0, 0, l2, m2, np.array([
+#         [1, 0, 0, 0],
+#         [0, 1, 0, 0],
+#         [0, 0, 1, 0],
+#         [0, 0, 0, 1],
+#     ]), 1, 0.)
+# ]
+
+
+
+
 links = [
     (0, 0, l1, m1, np.array([
         [1, 0, 0, 0],
@@ -399,55 +418,6 @@ links = [
     ]), 1, 0.)
 ]
 
-'''
-links = [
-    (0, 0, l1, m1, np.array([
-        [1/3 * m1 * l1**2, 0, 0, -0.5 * m1 * l1],
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-        [-0.5 * m1 * l1, 0, 0, m1],
-    ]), 1, 0.),  # Link 1
-    (0, 0, l2, m2, np.array([
-        [1/3 * m2 * l2**2, 0, 0, -0.5 * m2 * l2],
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-        [-0.5 * m2 * l2, 0, 0, m2],
-    ]), 1, 0.)   # Link 2
-]
-
-
-'''
-
-'''
-links = [
-    (0, 0, 1, 1, np.array([
-        [1, 0, 0, 0],
-        [0, 1, 0, 0],
-        [0, 0, 1, 0],
-        [0, 0, 0, 1],
-    ]), 1, 0.),  # Link 1
-    (0, 0, 1, 1, np.array([
-        [1, 0, 0, 0],
-        [0, 1, 0, 0],
-        [0, 0, 1, 0],
-        [0, 0, 0, 1],
-    ]), 1, 0.),   # Link 2
-    (0, 0, 1, 1, np.array([
-        [m1 * l1**2, 0, 0, 0],
-        [0, 1, 0, 0],
-        [0, 0, 1, 0],
-        [0, 0, 0, m1],
-    ]), 1, 0.)
-]
-'''
-'''
-links = [(0, 0, l1, m1, np.array([
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-    ]), 1, 0.)]
-'''
 time = np.linspace(0, 10, 1001)  # Time steps from 0 to 10 seconds
 
 t_span = (0, 10)
@@ -456,6 +426,8 @@ t_eval = np.linspace(*t_span, n_steps)
 
 # Initial conditions: [theta1, theta2, theta1_dot, theta2_dot]
 y0 = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+# y0 = np.array([0.0, 0.0, 0.0, 0.0])
+
 
 sol = solve_ivp(dynamics, t_span, y0, t_eval=t_eval, method='RK45')
 
@@ -485,21 +457,39 @@ plt.grid()
 plt.show()
 
 
-data = np.vstack([
-    sol.y[0], sol.y[1], sol.y[2],       # theta1, theta2
-    sol.y[3], sol.y[4], sol.y[5],       # thetadot1, thetadot2
-    thetaddot[0], thetaddot[1], thetaddot[2]   # thetaddot1, thetaddot2
-]).T  # Transpose to shape (n_points, 7)
+theta_list = [sol.y[i] for i in range(n)]
+thetadot_list = [sol.y[i + n] for i in range(n)]
+thetaddot_list = [thetaddot[i] for i in range(n)]
 
-# Create DataFrame
-df = pd.DataFrame(data, columns=[
-    "theta1", "theta2", "theta3",
-    "thetadot1", "thetadot2", "thetadot3",
-    "thetaddot1", "thetaddot2", "thetaddot3"
-])
+data = np.vstack(theta_list + thetadot_list + thetaddot_list).T
+
+columns = (
+    [f"theta{i+1}" for i in range(n)] +
+    [f"thetadot{i+1}" for i in range(n)] +
+    [f"thetaddot{i+1}" for i in range(n)]
+)
+
+df = pd.DataFrame(data, columns=columns)
+
+
+
+# data = np.vstack([
+#     sol.y[0], sol.y[1], sol.y[2],       # theta1, theta2
+#     sol.y[3], sol.y[4], sol.y[5],       # thetadot1, thetadot2
+#     thetaddot[0], thetaddot[1], thetaddot[2]   # thetaddot1, thetaddot2
+# ]).T  # Transpose to shape (n_points, 7)
+
+# # Create DataFrame
+# df = pd.DataFrame(data, columns=[
+#     "theta1", "theta2", "theta3",
+#     "thetadot1", "thetadot2", "thetadot3",
+#     "thetaddot1", "thetaddot2", "thetaddot3"
+# ])
 
 # Save to CSV
-df.to_csv("./data/LEForw.csv", index=False)
+df.to_csv("./data/LEForw3.csv", index=False)
+# df.to_csv("./data/LEForw2.csv", index=False)
+
 # Plot the torques
 
 # plt.figure(figsize=(15, 5))
