@@ -104,7 +104,7 @@ def c_func(i, links, g, q):
 
 
 def tau_input(t): # initial input used
-    return np.array([0.1 * np.sin(np.pi/3 * t), 0 * np.sin(1.5 * t), 0 * np.cos(2 * t)]) # 0.075 * np.cos(2 * t)
+    return np.array([0, 0.75 * np.sin(1.0 * t), 1.5 * np.cos(1.5 * t)]) # 0.075 * np.cos(2 * t)
 
 
 def load_joint_data(npy_filename, n, time_int, filetype):
@@ -425,7 +425,7 @@ n_steps = 1000
 t_eval = np.linspace(*t_span, n_steps)
 
 # Initial conditions: [theta1, theta2, theta1_dot, theta2_dot]
-y0 = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+y0 = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0]) # np.pi/2
 # y0 = np.array([0.0, 0.0, 0.0, 0.0])
 
 

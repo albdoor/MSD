@@ -157,6 +157,7 @@ def rnea(q, qd, qdd, links, gravity):
     for i in range(n):
         theta, alpha, r, m, I, j_type, b = links[i]
         print('======================= Main Loop ==================================')
+        print(b)
         R.append(rotation_matrix(i - 1, i, q, links))
         print(R[i])
         # print(R[i])
