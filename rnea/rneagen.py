@@ -268,17 +268,23 @@ n = 3
 
 
 links = [
-    (0, 0, 1.0, 1.0, np.diag([1, 1, 1]), 1, 0.),  # Link 1
-    (0, 0, 1.0, 1.0, np.diag([1, 1, 1]), 1, 0.),
-    (0, 0, 1.0, 1.0, np.diag([1, 1, 1]), 1, 0.)      # Link 2
+    (0, 0, 1.0, 1.0, np.diag([0.0, 1/12 * 1, 1/12 * 1]), 1, 0.),  # Link 1
+    (0, 0, 1.0, 1.0, np.diag([0.0, 1/12 * 1, 1/12 * 1]), 1, 0.)   # Link 2
+    (0, 0, 1.0, 1.0, np.diag([0.0, 1/12 * 1, 1/12 * 1]), 1, 0.)   # Link 2
 ]
+
+# links = [
+#     (0, 0, 1.0, 1.0, np.diag([1, 1, 1]), 1, 0.),  # Link 1
+#     (0, 0, 1.0, 1.0, np.diag([1, 1, 1]), 1, 0.),
+#     (0, 0, 1.0, 1.0, np.diag([1, 1, 1]), 1, 0.)      # Link 2
+# ]
 
 time = np.linspace(0, 10, 1000)  # Time steps from 0 to 10 seconds
 torques = []
 
 torquesLE = []
 
-q_csv, qd_csv, qdd_csv = load_joint_data('./data/LEForw3.csv', n, len(time), 'csv') # './providedForward/rl_multilink_simulation.csv' './data/LEForw.csv'
+q_csv, qd_csv, qdd_csv = load_joint_data('./data/LEForw_2link.csv', n, len(time), 'csv') # './providedForward/rl_multilink_simulation.csv' './data/LEForw.csv'
 # './providedForwardMod/rl_multilink_simulation2.csv'
 
 print("Shape of q:", np.shape(q_csv))
@@ -312,6 +318,9 @@ for t_idx in range(len(time)): #len(time)
 
 torques = np.array(torques)
 torquesLE = np.array(torquesLE)
+
+torques[np.abs(torques) < threshold] = 0.0
+torquesLE[np.abs(torquesLE) < threshold] = 0.0
 
 
 # Plot the torques

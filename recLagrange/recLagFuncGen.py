@@ -350,7 +350,7 @@ m2 = 1
 l1 = 1
 l2 = 1
 
-n = 3
+n = 2
 
 # Define the manipulator links: (theta, alpha, length, mass, inertia tensor, joint type: 0 - translational, 1 - rotational, damping coeff.)
 '''
@@ -369,7 +369,8 @@ links = [
     ]), 1, 0.)
 ]
 '''
-'''
+
+
 links = [
     (0, 0, l1, m1, np.array([
         [1/3 * m1 * l1**2, 0, 0, -0.5 * m1 * l1],
@@ -386,29 +387,28 @@ links = [
 ]
 
 
-'''
 
 
-links = [
-    (0, 0, 1, 1, np.array([
-        [1, 0, 0, 0],
-        [0, 1, 0, 0],
-        [0, 0, 1, 0],
-        [0, 0, 0, 1],
-    ]), 1, 0.),  # Link 1
-    (0, 0, 1, 1, np.array([
-        [1, 0, 0, 0],
-        [0, 1, 0, 0],
-        [0, 0, 1, 0],
-        [0, 0, 0, 1],
-    ]), 1, 0.),   # Link 2
-    (0, 0, 1, 1, np.array([
-        [m1 * l1**2, 0, 0, 0],
-        [0, 1, 0, 0],
-        [0, 0, 1, 0],
-        [0, 0, 0, m1],
-    ]), 1, 0.)
-]
+# links = [
+#     (0, 0, 1, 1, np.array([
+#         [1, 0, 0, 0],
+#         [0, 1, 0, 0],
+#         [0, 0, 1, 0],
+#         [0, 0, 0, 1],
+#     ]), 1, 0.),  # Link 1
+#     (0, 0, 1, 1, np.array([
+#         [1, 0, 0, 0],
+#         [0, 1, 0, 0],
+#         [0, 0, 1, 0],
+#         [0, 0, 0, 1],
+#     ]), 1, 0.),   # Link 2
+#     (0, 0, 1, 1, np.array([
+#         [m1 * l1**2, 0, 0, 0],
+#         [0, 1, 0, 0],
+#         [0, 0, 1, 0],
+#         [0, 0, 0, m1],
+#     ]), 1, 0.)
+# ]
 
 
 
@@ -426,7 +426,7 @@ torques = []
 torquesLE = []
 
 
-q_csv, qd_csv, qdd_csv = load_joint_data('./data/LEForw3.csv', n, len(time), 'csv') # './providedForward/rl_multilink_simulation.csv'
+q_csv, qd_csv, qdd_csv = load_joint_data('./data/planarDoublePend.csv', n, len(time), 'csv') # './providedForward/rl_multilink_simulation.csv'
 
 # './providedForwardMod/rl_multilink_simulation2.csv' , './data/planarDoublePend.csv'
 

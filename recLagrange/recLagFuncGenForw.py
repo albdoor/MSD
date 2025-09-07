@@ -104,7 +104,7 @@ def c_func(i, links, g, q):
 
 
 def tau_input(t): # initial input used
-    return np.array([0, 0.75 * np.sin(1.0 * t), 1.5 * np.cos(1.5 * t)]) # 0.075 * np.cos(2 * t)
+    return np.array([0, 0, 0]) # 0.075 * np.cos(2 * t)............. 2 * np.sin(0.5 * t), 1.5 * np.cos(1.5 * t)
 
 
 def load_joint_data(npy_filename, n, time_int, filetype):
@@ -396,27 +396,59 @@ gravity = np.array([[0, -g, 0, 0]])
 
 
 
-
 links = [
     (0, 0, l1, m1, np.array([
-        [1, 0, 0, 0],
-        [0, 1, 0, 0],
-        [0, 0, 1, 0],
-        [0, 0, 0, 1],
+        [1/3 * m1 * l1**2, 0, 0, -0.5 * m1 * l1],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [-0.5 * m1 * l1, 0, 0, m1],
     ]), 1, 0.),  # Link 1
     (0, 0, l2, m2, np.array([
-        [1, 0, 0, 0],
-        [0, 1, 0, 0],
-        [0, 0, 1, 0],
-        [0, 0, 0, 1],
-    ]), 1, 0.),
+        [1/3 * m2 * l2**2, 0, 0, -0.5 * m2 * l2],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [-0.5 * m2 * l2, 0, 0, m2],
+    ]), 1, 0.),   # Link 2
     (0, 0, l2, m2, np.array([
-        [1, 0, 0, 0],
-        [0, 1, 0, 0],
-        [0, 0, 1, 0],
-        [0, 0, 0, 1],
-    ]), 1, 0.)
+        [1/3 * m2 * l2**2, 0, 0, -0.5 * m2 * l2],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [-0.5 * m2 * l2, 0, 0, m2],
+    ]), 1, 0.)   # Link 2
 ]
+
+
+# links = [
+#     (0, 0, l1, m1, np.array([
+#         [1, 0, 0, 0],
+#         [0, 1, 0, 0],
+#         [0, 0, 1, 0],
+#         [0, 0, 0, 1],
+#     ]), 1, 0.)
+#     ]  # Link 1
+
+
+
+# links = [
+#     (0, 0, l1, m1, np.array([
+#         [1, 0, 0, 0],
+#         [0, 1, 0, 0],
+#         [0, 0, 1, 0],
+#         [0, 0, 0, 1],
+#     ]), 1, 0.),  # Link 1
+#     (0, 0, l2, m2, np.array([
+#         [1, 0, 0, 0],
+#         [0, 1, 0, 0],
+#         [0, 0, 1, 0],
+#         [0, 0, 0, 1],
+#     ]), 1, 0.),
+#     (0, 0, l2, m2, np.array([
+#         [1, 0, 0, 0],
+#         [0, 1, 0, 0],
+#         [0, 0, 1, 0],
+#         [0, 0, 0, 1],
+#     ]), 1, 0.)
+# ]
 
 time = np.linspace(0, 10, 1001)  # Time steps from 0 to 10 seconds
 
@@ -425,7 +457,7 @@ n_steps = 1000
 t_eval = np.linspace(*t_span, n_steps)
 
 # Initial conditions: [theta1, theta2, theta1_dot, theta2_dot]
-y0 = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0]) # np.pi/2
+y0 = np.array([0.0, 0.0, -np.pi/3, 0.0, 0.0, 0.0]) # np.pi/2
 # y0 = np.array([0.0, 0.0, 0.0, 0.0])
 
 
@@ -446,15 +478,28 @@ for i in range(len(sol.t)):
 print(np.shape(sol.y[0]))
 print(np.shape(thetaddot))
 
-plt.plot(sol.t, thetaddot[0, :], label='θ₁')
-plt.plot(sol.t, thetaddot[1, :], label='θ₂')
-plt.plot(sol.t, thetaddot[2, :], label='θ3')
+plt.plot(sol.t, thetaddot[0, :], label='θddot₁')
+plt.plot(sol.t, thetaddot[1, :], label='θddot₂')
+# plt.plot(sol.t, thetaddot[2, :], label='θddot3')
 plt.xlabel('Time [s]')
 plt.ylabel('Angle [rad]')
 plt.title('Forward Dynamics Simulation')
 plt.legend()
 plt.grid()
 plt.show()
+
+
+
+plt.plot(sol.t, sol.y[0], label='θ₁')
+plt.plot(sol.t, sol.y[1], label='θ₂')
+# plt.plot(sol.t, sol.y[2], label='θ3')
+plt.xlabel('Time [s]')
+plt.ylabel('Angle [rad]')
+plt.title('Forward Dynamics Simulation')
+plt.legend()
+plt.grid()
+plt.show()
+
 
 
 theta_list = [sol.y[i] for i in range(n)]
@@ -487,7 +532,7 @@ df = pd.DataFrame(data, columns=columns)
 # ])
 
 # Save to CSV
-df.to_csv("./data/LEForw3.csv", index=False)
+df.to_csv("./data/LEForw_3link.csv", index=False)
 # df.to_csv("./data/LEForw2.csv", index=False)
 
 # Plot the torques
@@ -575,4 +620,13 @@ plt.title('Joint Torques Over Time')
 # Put coefficients for 
 # gammai = {1, 0}
 # General NE
+# 
+
+# compare for the n = 1 and n = 2
+
+# make sure init conditions are the same for all codes
+# 
+
+
+# hard-wire inverse NE for 1 and 2 systems
 # 

@@ -16,7 +16,9 @@ def load_joint_data(npy_filename):
     """
     # data = np.load(npy_filename, allow_pickle=True)
     # data = data[0] if isinstance(data[0], list) else data
-    data = np.loadtxt(npy_filename, delimiter=',')
+    data = np.loadtxt(npy_filename, delimiter=',', skiprows=1)
+
+    # data = np.loadtxt(npy_filename, delimiter=',')
     data = data.T
     q = np.vstack((data[0], data[1])).T
     qd = np.vstack((data[2], data[3])).T 
@@ -141,17 +143,23 @@ def rnea(q, qd, qdd, links, gravity):
     return tau
 
 # Define the manipulator links: (theta, alpha, length, mass, inertia tensor, joint type: 0 - translational, 1 - rotational, damping coeff.)
+# links = [
+#     (0, 0, 1.0, 1.0, np.diag([0.0, 1/12 * 1, 1/12 * 1]), 1, 0.),  # Link 1
+#     (0, 0, 1.0, 1.0, np.diag([0.0, 1/12 * 1, 1/12 * 1]), 1, 0.)   # Link 2
+# ]
+
 links = [
-    (0, 0, 1.0, 1.0, np.diag([0.0, 1/12 * 1, 1/12 * 1]), 1, 0.),  # Link 1
-    (0, 0, 1.0, 1.0, np.diag([0.0, 1/12 * 1, 1/12 * 1]), 1, 0.)   # Link 2
+    (0, 0, 1.0, 1.0, np.diag([1, 1, 1]), 1, 0.),  # Link 1
+    (0, 0, 1.0, 1.0, np.diag([1, 1, 1]), 1, 0.)   # Link 2
 ]
+
 
 time = np.linspace(0, 10, 1000)  # Time steps from 0 to 10 seconds
 torques = []
 
 torquesLE = []
 
-q_csv, qd_csv, qdd_csv = load_joint_data('./data/planarDoublePend.csv')
+q_csv, qd_csv, qdd_csv = load_joint_data('./data/LEForw_1link.csv') #./data/planarDoublePend.csv
 print("Shape of q:", np.shape(q_csv))
 print("Shape of qd:", np.shape(qd_csv))
 print("Shape of qdd:", np.shape(qdd_csv))
