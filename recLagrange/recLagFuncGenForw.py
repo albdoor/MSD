@@ -14,14 +14,7 @@ def Uij(i, j, q, links):  # provides the integration matrix    TO BE CHECKED
         theta, alpha, r, m, I, j_type, b = links[i]
         if (i == j) and (j == 0):
             u_deriv =  Q_mat() @ coord_transform_new(j-1, i, q, links)
-            # print("-------------------- Passing through Uij ----------------------")
-            # print(coord_transform_new(j-1, i, q, links))
-            # print(q[i])
-            # print(u_deriv)
             return u_deriv
-        # if (j == 0) and (i == 1):
-        #     u_deriv =  Q_mat() @ coord_transform_to_base(q, links, i)
-        #     return u_deriv
         u_deriv = coord_transform_to_base(q, links, j-1) @ Q_mat() @ coord_transform_new(j-1, i, q, links)
         # print('----------------------- Passing through Uij function ----------------------------')
         # print(coord_transform_to_base(q, links, j-1))
@@ -35,13 +28,7 @@ def Uijk(i, j, k, q, links):  # provides the double integration matrix   TO BE C
         return 0
     elif ((i >= k) and (k >= j)):
         theta, alpha, r, m, I, j_type, b = links[i] 
-        # print('--------------------------- Passing through Uijk ----------------------------------')
-        # print(np.shape(coord_transform_to_base(q, links, j-1)))
-        # print(np.shape(coord_transform_new(j-1, k-1, q, links)))
-        # print(k-1)
-        # print(i)
-        # print(np.shape(coord_transform_new(k-1, i, q, links)))
-        # print(f' ----------------------------- U {i} {j} {k} --------------------------')
+
         uijk_deriv = coord_transform_to_base(q, links, j-1) @ Q_mat() @ coord_transform_new(j-1, k-1, q, links) @ Q_mat() @ coord_transform_new(k-1, i, q, links)
         # print(uijk_deriv)
         return uijk_deriv
@@ -62,11 +49,7 @@ def d_func(i, k, links, q):
         ujk = Uij(j, k, q, links)
 
         uji = Uij(j, i, q, links)
-        # print("-------------- Printing ujk and uji --------------------------------")
-        # print(f' ----------------------------- U {j} {k} --------------------------')
-        # print(ujk)
-        # print(ujk)
-        # print(uji)
+
         sum += np.trace(ujk @ inertia_tensor @ uji.T) 
     return sum
 
@@ -101,21 +84,14 @@ def c_func(i, links, g, q):
         res += (-m * g @ uji @ rmid)
     return res    
 
-
+ 
 
 def tau_input(t): # initial input used
-    return np.array([0, 0, 0]) # 0.075 * np.cos(2 * t)............. 2 * np.sin(0.5 * t), 1.5 * np.cos(1.5 * t)
+    return np.array([0 * np.sin(2 * t), 0.25 * np.sin(2 * t), 0.0 * np.sin(2 * t)]) # 0.075 * np.cos(2 * t)............. 2 * np.sin(0.5 * t), 1.5 * np.cos(1.5 * t)
 
 
 def load_joint_data(npy_filename, n, time_int, filetype):
-    # data = np.load(npy_filename, allow_pickle=True)
-    # data = data[0] if isinstance(data[0], list) else data
-    # data = np.loadtxt(npy_filename, delimiter=',')
-    # data = data.T
-    # q = np.vstack((data[0], data[1])).T
-    # qd = np.vstack((data[2], data[3])).T 
-    # qdd = np.vstack((data[4], data[5])).T 
-    # return q, qd, qdd
+
     if filetype == 'csv':
         data = np.loadtxt(npy_filename, delimiter=',', skiprows=1)
         data = data.T
@@ -146,19 +122,6 @@ def load_joint_data(npy_filename, n, time_int, filetype):
 
 
 def coord_transform_new(i, j, q, links):
-    '''
-    if (abs(j - i) > 1):
-        id_matr = np.array([
-        [1, 0, 0, 0],
-        [0, 1, 0, 0],
-        [0, 0, 1, 0],
-        [0, 0, 0, 1]
-        ])
-        theta, alpha, r, m, I, j_type, b = links[j]
-        for k in range(i, j):
-            id_matr = id_matr @ coord_transform_new(k, k + 1, q, links)
-        return id_matr
-    '''
     iden_matrix = np.array([
         [1, 0, 0, 0],
         [0, 1, 0, 0],
@@ -198,8 +161,7 @@ def coord_transform_new(i, j, q, links):
             return res  
     elif (j-i > 1): #check
         res = np.eye(4)
-        # print(j)
-        # print(i)
+ 
         for k in range(i, j):
             theta, alpha, r, m, I, j_type, b = links[k]
             temp = np.array([
@@ -209,19 +171,11 @@ def coord_transform_new(i, j, q, links):
                 [0, 0, 0, 1]
             ])
             res = res @ temp
-            # print('----------------------------- Coordinate Transform -----------------------------------------------')
-            # print(k)
-            # print(res)
-        # res[np.abs(res) < threshold] = 0.0
         return res
 
 
 
-    
 
-
-# j-i == 1 review
-# review the above function
 
 def coord_transform(theta, l):
     return np.array([
@@ -269,14 +223,6 @@ def coord_transform_to_base(q, links, link_idx):
         # res[np.abs(res) < threshold] = 0.0
         return res
 
-            # the = q[i]
-            # cumul_angle += the
-    # R_direct = np.array([
-    #     [np.cos(cumul_angle), -np.sin(cumul_angle), 0, l * (cos())],
-    #     [np.sin(cumul_angle), np.cos(cumul_angle), 0],
-    #     [0, 0, 1]
-    # ])
-    # Return the direct calculation (more efficient)
     l = 1
     R_direct = np.array([
         [np.cos(cumul_angle), -np.sin(cumul_angle), 0, l * (np.cos(cumul_angle) + np.cos(q[0]))],
@@ -284,7 +230,6 @@ def coord_transform_to_base(q, links, link_idx):
         [0, 0, 1, 0],
         [0, 0, 0, 1]
     ])
-    # R_direct[np.abs(R_direct) < threshold] = 0.0
     return R_direct
 
 
@@ -334,22 +279,16 @@ def recLag(q, qd, links, gravity):
     print(h)
     c = np.array(c).reshape((n, 1))
     print(c)
-    # tau = D @ np.array(qdd).reshape((n, 1)) +  h + c
-
     return D, h ,c
 
 
 def dynamics(t, y):
     theta = y[:n]
     thetadot = y[n:]
-    
-    # Dmat = D(theta)
-    # hvec = h(theta, thetadot)
-    # cvec = c(theta)
     tauvec = np.array(tau_input(t)).reshape((n, 1))
 
     Dmat, hvec, cvec = recLag(theta, thetadot, links, gravity)
-
+    # hvec = np.zeros((n, 1))
     theta_ddot = np.linalg.solve(Dmat, tauvec - hvec - cvec).flatten()
 
     return np.concatenate([thetadot, theta_ddot])
@@ -381,19 +320,18 @@ gravity = np.array([[0, -g, 0, 0]])
 
 # links = [
 #     (0, 0, l1, m1, np.array([
-#         [1, 0, 0, 0],
-#         [0, 1, 0, 0],
-#         [0, 0, 1, 0],
-#         [0, 0, 0, 1],
+#         [1/3 * m1 * l1**2, 0, 0, -0.5 * m1 * l1],
+#         [0, 0, 0, 0],
+#         [0, 0, 0, 0],
+#         [-0.5 * m1 * l1, 0, 0, m1],
 #     ]), 1, 0.),  # Link 1
 #     (0, 0, l2, m2, np.array([
-#         [1, 0, 0, 0],
-#         [0, 1, 0, 0],
-#         [0, 0, 1, 0],
-#         [0, 0, 0, 1],
-#     ]), 1, 0.)
+#         [1/3 * m2 * l2**2, 0, 0, -0.5 * m2 * l2],
+#         [0, 0, 0, 0],
+#         [0, 0, 0, 0],
+#         [-0.5 * m2 * l2, 0, 0, m2],
+#     ]), 1, 0.)   # Link 2
 # ]
-
 
 
 links = [
@@ -450,15 +388,15 @@ links = [
 #     ]), 1, 0.)
 # ]
 
-time = np.linspace(0, 10, 1001)  # Time steps from 0 to 10 seconds
+time = np.linspace(0, 10, 1000)  # Time steps from 0 to 10 seconds
 
 t_span = (0, 10)
 n_steps = 1000
 t_eval = np.linspace(*t_span, n_steps)
 
 # Initial conditions: [theta1, theta2, theta1_dot, theta2_dot]
-y0 = np.array([0.0, 0.0, -np.pi/3, 0.0, 0.0, 0.0]) # np.pi/2
-# y0 = np.array([0.0, 0.0, 0.0, 0.0])
+# y0 = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0]) # np.pi/2
+y0 = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
 
 
 sol = solve_ivp(dynamics, t_span, y0, t_eval=t_eval, method='RK45')
@@ -478,18 +416,18 @@ for i in range(len(sol.t)):
 print(np.shape(sol.y[0]))
 print(np.shape(thetaddot))
 
+plt.figure()
 plt.plot(sol.t, thetaddot[0, :], label='θddot₁')
 plt.plot(sol.t, thetaddot[1, :], label='θddot₂')
 # plt.plot(sol.t, thetaddot[2, :], label='θddot3')
 plt.xlabel('Time [s]')
-plt.ylabel('Angle [rad]')
+plt.ylabel('Acceleration [rad/s^2]')
 plt.title('Forward Dynamics Simulation')
 plt.legend()
 plt.grid()
-plt.show()
 
 
-
+plt.figure()
 plt.plot(sol.t, sol.y[0], label='θ₁')
 plt.plot(sol.t, sol.y[1], label='θ₂')
 # plt.plot(sol.t, sol.y[2], label='θ3')
@@ -498,7 +436,6 @@ plt.ylabel('Angle [rad]')
 plt.title('Forward Dynamics Simulation')
 plt.legend()
 plt.grid()
-plt.show()
 
 
 
@@ -515,6 +452,12 @@ columns = (
 )
 
 df = pd.DataFrame(data, columns=columns)
+df.to_csv("./data/LEForw_3link.csv", index=False)
+
+
+plt.show()
+
+
 
 
 
@@ -532,7 +475,6 @@ df = pd.DataFrame(data, columns=columns)
 # ])
 
 # Save to CSV
-df.to_csv("./data/LEForw_3link.csv", index=False)
 # df.to_csv("./data/LEForw2.csv", index=False)
 
 # Plot the torques
@@ -630,3 +572,5 @@ plt.title('Joint Torques Over Time')
 
 # hard-wire inverse NE for 1 and 2 systems
 # 
+# 26.09.25
+# relative or absolute coordinates for the NE
