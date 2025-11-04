@@ -77,6 +77,7 @@ def rotation_matrix_to_base(q, links, link_idx):
 
 
 
+
 def rotation_matrix(i, j, q, links):
     iden_matrix = np.array([
         [1, 0, 0],
@@ -139,8 +140,64 @@ def p_star_vector(q, l, i, j):
         return np.array([[l], [0], [0]])
     if (i - j == 1):
         res = (rotation_matrix(i-1, i, q, links).T) @ p_star_vector(q, l, j, j)
-        return res 
+        return res
+    
 
+# ------------------------------ New Functions ---------------------------------------
+def r_vector(i, l):
+    return np.array([[l], [0], [0]])
+
+
+def p_vector(i, l):
+    return np.array([[l/2], [0], [0]])
+
+def skew_symmetric(v):
+    return np.array([[0, -v[2], v[1]],
+                     [v[2], 0, -v[0]],
+                     [-v[1], v[0], 0]]) 
+
+def vector_from_skew(S):
+    return np.array([S[2, 1], S[0, 2], S[1, 0]])
+
+
+def composite_mass(links, i):
+    total_mass = 0
+    for j in range(0, i):
+        theta, alpha, r, m, I, j_type, b = links[j]
+        total_mass += m
+    return total_mass
+
+
+def transform_inertia_tensor(I_local, R_ki, q, links, i, j):
+    """
+    Transform inertia tensor from the link's local frame (i) 
+    to another frame (k).
+    
+    Parameters
+    ----------
+    I_local : (3,3) array_like
+        Inertia tensor expressed in the link's own frame (i).
+    R_ki : (3,3) array_like
+        Rotation matrix from frame i to frame k.
+        That is, it transforms a vector from frame i into frame k.
+        
+    Returns
+    -------
+    I_global : (3,3) ndarray
+        Inertia tensor expressed in frame k.
+    """
+    theta, alpha, r, m, I_local, j_type, b = links[i]
+    R_ki = rotation_matrix(i, j, q, links)
+    I_global = R_ki @ I_local @ R_ki.T
+    return I_global
+
+def unit_inertia(links, i):
+    theta, alpha, r, m, I_local, j_type, b = links[i]
+    I_unit = I_local / m
+    return I_unit
+
+
+# ------------------------------ New Functions ---------------------------------------
 
 def rnea(q, qd, qdd, links, gravity):
     n = len(links)  # Number of links
@@ -152,6 +209,19 @@ def rnea(q, qd, qdd, links, gravity):
     Rbase = []
     p_star = []
     s_bar = []
+    comp_mass = []
+    u_skew = np.zeros((n, 3))
+    k = []
+    k_comp = []
+    for i in range(n):
+        theta, alpha, r, m, I, j_type, b = links[i]
+        rvec = r_vector(i, r).reshape(3, )
+        pvec = p_vector(i, r).reshape(3, )
+        comp_mass[i] = composite_mass(links, i+1) + m
+        u_skew[i] = m * rvec + comp_mass(links, i + 1) * p_vector(i, r).reshape(3, )
+        k[i] = I - m * rvec * rvec - composite_mass(links, i+1) * pvec * pvec
+        k_comp[i] = k[i] - 0.5 * np.trace(k[i]) * I
+
     for i in range(n):
         theta, alpha, r, m, I, j_type, b = links[i]
         print('======================= Main Loop ==================================')
