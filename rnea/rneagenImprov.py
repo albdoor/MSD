@@ -132,24 +132,7 @@ def rotation_matrix(i, j, q, links):
         return res
 
 
-def s_vector(q, l):
-       return np.array([[-l/2], [0], [0]]) 
-
-def p_star_vector(q, l, i, j):
-    if (i == j):
-        return np.array([[l], [0], [0]])
-    if (i - j == 1):
-        res = (rotation_matrix(i-1, i, q, links).T) @ p_star_vector(q, l, j, j)
-        return res
-    
-
 # ------------------------------ New Functions ---------------------------------------
-def r_vector(i, l):
-    return np.array([[l], [0], [0]])
-
-
-def p_vector(i, l):
-    return np.array([[l/2], [0], [0]])
 
 def skew_symmetric(v):
     return np.array([[0, -v[2], v[1]],
@@ -196,80 +179,91 @@ def unit_inertia(links, i):
     I_unit = I_local / m
     return I_unit
 
+def r_skew(i, j, links):
+    if i == j:
+        theta, alpha, r, m, I, j_type, b = links[i]
+        return skew_symmetric(np.array([[r], [0], [0]]).reshape(3, ))
+    elif (i - j == 1):
+        theta, alpha, r, m, I, j_type, b = links[i]
+        res = (rotation_matrix(i-1, i, q, links).T) @ r_skew(j, j, links)
+        return skew_symmetric(res.reshape(3, ))    
+    
 
+def omega_plus(i, q, qd, links, omega):
+    R = rotation_matrix(i, i + 1, q, links)
+    res = R.T @ (R @ omega - np.array([[0], [0], [qd[i + 1]]]))
+    return res.reshape((3, ))
+
+
+def p_skew(i, j, links):
+    if i == j:
+        theta, alpha, r, m, I, j_type, b = links[i]
+        return skew_symmetric(np.array([[r/2], [0], [0]]).reshape(3, ))
+    elif (i - j == 1):
+        theta, alpha, r, m, I, j_type, b = links[i]
+        res = (rotation_matrix(i-1, i, q, links).T) @ p_skew(j, j, links)
+        return skew_symmetric(res.reshape(3, ))
+
+# Must work on the doc: insert equations from textbooks
 # ------------------------------ New Functions ---------------------------------------
 
 def rnea(q, qd, qdd, links, gravity):
     n = len(links)  # Number of links
     omega = np.zeros((n, 3))  # Angular velocity
     omegad = np.zeros((n, 3))  # Angular acceleration
-    vd = np.zeros((n, 3))  # Linear acceleration
-    a_c = np.zeros((n, 3))
+    Omega = np.zeros((n, 3))
+    pdd = np.zeros((n, 3))  # Linear acceleration
+    mu = np.zeros((n, 3))
     R = []  # Rotation matrices
     Rbase = []
-    p_star = []
-    s_bar = []
     comp_mass = []
-    u_skew = np.zeros((n, 3))
+    u_skew = []
     k = []
     k_comp = []
     for i in range(n):
         theta, alpha, r, m, I, j_type, b = links[i]
-        rvec = r_vector(i, r).reshape(3, )
-        pvec = p_vector(i, r).reshape(3, )
-        comp_mass[i] = composite_mass(links, i+1) + m
-        u_skew[i] = m * rvec + comp_mass(links, i + 1) * p_vector(i, r).reshape(3, )
-        k[i] = I - m * rvec * rvec - composite_mass(links, i+1) * pvec * pvec
-        k_comp[i] = k[i] - 0.5 * np.trace(k[i]) * I
+        rskew = r_skew(i, i, links)
+        pskew = p_skew(i+1, i, links)
+        E_inertia = unit_inertia(links, i)
+        next_comp_mass = composite_mass(links, i+1)
+        comp_mass[i] = next_comp_mass + m
+        u_skew[i] = m * rskew + next_comp_mass * pskew
+        k[i] = I - m * rskew * rskew - next_comp_mass * pskew * pskew
+        k_comp[i] = k[i] - 0.5 * np.trace(k[i]) * E_inertia
 
-    for i in range(n):
+    for i in range(-1, n - 2):
         theta, alpha, r, m, I, j_type, b = links[i]
         print('======================= Main Loop ==================================')
         print(b)
-        R.append(rotation_matrix(i - 1, i, q, links))
+        R.append(rotation_matrix(i, i + 1, q, links))
         print(R[i])
         # print(R[i])
         Rbase.append(rotation_matrix_to_base(q, links, i))
-        print(Rbase[i])
-        p_star.append(p_star_vector(q, r, i, i))
-        print(p_star[i])
-        s_bar.append(s_vector(q[i], r))
-        print(s_bar[i])
-        if i == 0:
+
+        if i == -1:
             if (j_type):
-                omega[i] =  (R[i].T @ np.array([[0], [0], [qd[i]]])).reshape((3, ))
-                omegad[i] = (R[i].T @ np.array([[0], [0], [qdd[i]]])).reshape((3, ))
-                vd[i] = (np.cross(omegad[i], (p_star[i]).T) + np.cross(omega[i], np.cross(omega[i], p_star[i].T)) + R[i].T @ gravity).reshape((3, ))
+                omega[i+1] =  (np.array([[0], [0], [qd[i]]])).reshape((3, ))
+                omegaplus = skew_symmetric(omega_plus(i, q, qd, links, omega[i+1]))
+                omegad[i+1] = (omegaplus @ np.array([[0], [0], [qd[i]]]) + np.array([[0], [0], [qdd[i]]])).reshape((3, ))
+                Omega[i+1] = skew_symmetric(omegad[i+1]) + skew_symmetric(omega[i+1]) @ skew_symmetric(omega[i+1])
+                pdd[i+1] = R[i].T @ (gravity)
+                tempmu = -(Omega[i+1] @ k_comp[i+1]) + (Omega[i+1] @ k_comp[i+1]).T
+                mu[i+1] = vector_from_skew(tempmu)
                 print('--------------------- i == 0 Case ---------------------------')
                 print(omega[i])
                 print(omegad[i])
-                print(vd[i])
-
-            else:   
-                omega[i] = np.zeros(3)
-                omegad[i] = np.zeros(3)
-                vd[i] = gravity + R[i] @ np.array([[qdd[i]], [0], [0]])  # Motion along joint axis
-                    
-            # print(vd[i])
         else:
             if (j_type):
-                print('-------------------------- i > 1 Case ------------------------------')
-                omega[i] = (R[i].T @ (omega[i - 1] + np.array([0, 0, qd[i]]))).reshape((3, )) #check
-                omegad[i] = (R[i].T @ (omegad[i - 1] + np.cross(omega[i-1], np.array([0, 0, qd[i]])) + np.array([0, 0, qdd[i]])).reshape((3, ))) #check
-                vd[i] = (R[i].T @ vd[i - 1] + np.cross(omegad[i], (p_star[i]).T) + np.cross(omega[i], np.cross(omega[i], (p_star[i]).T))).reshape((3, )) #check
-                print(omega[i])
-                print(omegad[i])
-                print(vd[i])
-            else:
-                omega[i] = R[i - 1] @ omega[i - 1]  # No angular motion
-                omegad[i] = R[i - 1] @ omegad[i - 1]
-                vd[i] = R[i - 1] @ vd[i - 1] + R[i] @ np.array([[qdd[i]], [0], [0]])
-        a_c[i] = np.cross(omegad[i],  (s_bar[i]).T) + np.cross(omega[i],  np.cross(omega[i],  (s_bar[i]).T)) + vd[i]
-        print(a_c[i])
+                pvec = vector_from_skew(p_skew(i+1, i, links))
+                omega[i+1] =  (R[i].T @ omega[i] + np.array([[0], [0], [qd[i]]])).reshape((3, ))
+                omegaplus = skew_symmetric(omega_plus(i, q, qd, links, omega[i+1]))
+                omegad[i+1] = (R[i].T @ omegad[i] + omegaplus @ np.array([[0], [0], [qd[i]]]) + np.array([[0], [0], [qdd[i]]])).reshape((3, ))
+                Omega[i+1] = skew_symmetric(omegad[i+1]) + skew_symmetric(omega[i+1]) @ skew_symmetric(omega[i+1])
+                pdd[i+1] = R[i].T @ (Omega[i] @ pvec + pdd[i])
+                tempmu = -(Omega[i+1] @ k_comp[i+1]) + (Omega[i+1] @ k_comp[i+1]).T
+                mu[i+1] = vector_from_skew(tempmu)
     # Backward recursion: force & torque propagation
-    F = np.zeros((n, 3))  # Force
-    N = np.zeros((n, 3))  # Torque
-    f = [np.zeros(3) for _ in range(n + 1)]  # Force on each link
+    udd = np.zeros((n, 3))  # Force
     n_torque = [np.zeros(3) for _ in range(n + 1)]  # To    rque on each link
     tau = np.zeros(n)  # Joint torques
     
@@ -277,23 +271,20 @@ def rnea(q, qd, qdd, links, gravity):
         theta, alpha, r, m, I, j_type, b = links[i]
         print(i)
         if i == n-1:
-            F[i] = m * a_c[i]
-            N[i] = np.dot(Rbase[i].T @ I @ Rbase[i], omegad[i]) + np.cross(omega[i], np.dot(Rbase[i].T @ I @ Rbase[i], omega[i]))
-            f[i] = F[i]
+            uvec = vector_from_skew(u_skew[i])
+            udd[i] = Omega[i] @ uvec
             print('------------------ Passing Through i = n - 1 -------------------------------------')
-            n_torque[i] = np.cross((p_star[i]).T + (s_bar[i]).T, F[i]) + N[i]
-            print(f[i])
+            n_torque[i] = mu[i] + u_skew[i] @ pdd[i]                  #(R[i+1] @ udd[i]) 
             print(n_torque[i])
         else: 
+            uvec = vector_from_skew(u_skew[i])
+            udd[i] = Omega[i] @ uvec + R[i] @ udd[i + 1]
+            n_torque[i] = mu[i] + u_skew[i] @ pdd[i] + skew_symmetric(pvec) @ ((R[i+1] @ udd[i])) + R[i] @ n_torque[i+1]                  #(R[i+1] @ udd[i]) 
             print('----------------- Passing Through i < n - 1 -------------------------------')
-            F[i] = m * a_c[i]
-            N[i] = np.dot(Rbase[i].T @ I @ Rbase[i], omegad[i]) + np.cross(omega[i], np.dot(Rbase[i].T @ I @ Rbase[i], omega[i]))
-            f[i] = R[i+1] @ f[i+1] + F[i]
-            n_torque[i] = (R[i+1] @ (n_torque[i+1] + np.cross((p_star_vector(q, r, i+1, i)).T, f[i+1])).T + (np.cross((p_star[i]).T + (s_bar[i]).T, F[i]) + N[i]).T).reshape(3, )
-
+        
         if j_type == 1:
             print('--------------------- Passing Through ---------------------------------------')
-            tau[i] = np.dot(n_torque[i].reshape(3,), R[i].T @ np.array([0, 0, 1]).T) + b * qd[i]
+            tau[i] = np.dot(n_torque[i].reshape(3,), np.array([0, 0, 1]).T) + b * qd[i]
             print(tau[i])
         else:  # Prismatic
             tau[i] = np.dot(f[i], R[i].T @ np.array([0, 0, 1])) + b * qd[i]    
