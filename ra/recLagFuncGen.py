@@ -103,7 +103,7 @@ def c_func(i, links, g, q):
 
 
 def tau_input(t): # initial input used
-    return np.array([0, 0.1 * np.sin(1.5 * t), 0.075 * np.cos(2 * t)]) # 2 * np.sin(0.5 * t), 1.5 * np.cos(1.5 * t)
+    return np.array([0, 0.1 * np.sin(1.5 * t), 0.075 * np.cos(2 * t), 0, 0]) # 2 * np.sin(0.5 * t), 1.5 * np.cos(1.5 * t)
 
 
 
@@ -350,7 +350,7 @@ m2 = 1
 l1 = 1
 l2 = 1
 
-n = 3
+n = 4
 
 # Define the manipulator links: (theta, alpha, length, mass, inertia tensor, joint type: 0 - translational, 1 - rotational, damping coeff.)
 '''
@@ -389,7 +389,13 @@ links = [
         [0, 0, 0, 0],
         [0, 0, 0, 0],
         [-0.5 * m2 * l2, 0, 0, m2],
-    ]), 1, 0.)   # Link 3
+    ]), 1, 0.),   # Link 3
+    (0, 0, l2, m2, np.array([
+        [1/3 * m2 * l2**2, 0, 0, -0.5 * m2 * l2],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [-0.5 * m2 * l2, 0, 0, m2],
+    ]), 1, 0.) 
 ]
 
 
@@ -432,7 +438,7 @@ torques = []
 torquesLE = []
 
 
-q_csv, qd_csv, qdd_csv = load_joint_data('./trajectory_data.csv', n, len(time), 'csv') # './providedForward/rl_multilink_simulation.csv'
+q_csv, qd_csv, qdd_csv = load_joint_data('./trajectory_data_gen.csv', n, len(time), 'csv') # './providedForward/rl_multilink_simulation.csv'
 
 # './providedForwardMod/rl_multilink_simulation2.csv' , './data/planarDoublePend.csv'
 
@@ -480,17 +486,16 @@ torques[np.abs(torques) < threshold] = 0.0
 torquesLE[np.abs(torquesLE) < threshold] = 0.0
 
 
-print("Shape of torques:", np.shape(torques))
+print("Shape of torques:", np.shape(torquesLE))
     # Create a dictionary with the data
-data = {
-        't1': torques[:, 0],
-        't2': torques[:, 1],
-        't3': torques[:, 2],
-    }
+# ...existing code...
+# Dynamically build CSV columns for the number of torques present
+cols = torques.shape[1] if (hasattr(torques, "ndim") and torques.ndim > 1) else 1
+data = {f't{i+1}': (torques[:, i] if cols > 1 else torques[:]) for i in range(cols)}
 
-    # Create a pandas DataFrame and save to CSV
 df = pd.DataFrame(data)
 df.to_csv('torquesLE.csv', index=False)
+# ...existing code...
 
 
 plot_graphs(n, torquesLE, torques)

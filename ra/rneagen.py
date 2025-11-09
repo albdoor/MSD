@@ -7,7 +7,7 @@ print(os.listdir()) # List all files in the current directory
 threshold = 1e-13
 
 def tau_input(t):
-    return np.array([0.5 * np.sin(3 * t), 0.88 * np.cos(2 * t), 0]) # , 0.075 * np.cos(2 * t) 0.88 * np.cos(2 * t), 0.88 * np.cos(2 * t)
+    return np.array([0.5 * np.sin(3 * t), 0.88 * np.cos(2 * t), 0, 0]) # , 0.075 * np.cos(2 * t) 0.88 * np.cos(2 * t), 0.88 * np.cos(2 * t)
 # 0, 0 * np.sin(1.5 * t), 0 * np.cos(2 * t)
 
 
@@ -248,7 +248,7 @@ def plot_graphs(n, data1, data2):
 
 # Define the manipulator links: (theta, alpha, length, mass, inertia tensor, joint type: 0 - translational, 1 - rotational, damping coeff.)
 # n = 2
-n = 3
+n = 4
 
 # links = [
 #     (0, 0, 1.0, 1.0, np.diag([0.0, 1/12 * 1, 1/12 * 1]), 1, 0.),  # Link 1
@@ -259,7 +259,9 @@ n = 3
 links = [
     (0, 0, 1.0, 1.0, np.diag([0.0, 1/12 * 1, 1/12 * 1]), 1, 0.),  # Link 1
     (0, 0, 1.0, 1.0, np.diag([0.0, 1/12 * 1, 1/12 * 1]), 1, 0.),   # Link 2
+    (0, 0, 1.0, 1.0, np.diag([0.0, 1/12 * 1, 1/12 * 1]), 1, 0.),   # Link 2
     (0, 0, 1.0, 1.0, np.diag([0.0, 1/12 * 1, 1/12 * 1]), 1, 0.)   # Link 2
+    
 ]
 
 # links = [
@@ -273,7 +275,7 @@ torques = []
 
 torquesLE = []
 
-q_csv, qd_csv, qdd_csv = load_joint_data('./trajectory_data.csv', n, len(time), 'csv') # './providedForward/rl_multilink_simulation.csv' './data/LEForw.csv'
+q_csv, qd_csv, qdd_csv = load_joint_data('./trajectory_data_gen.csv', n, len(time), 'csv') # './providedForward/rl_multilink_simulation.csv' './data/LEForw.csv'
 # './providedForwardMod/rl_multilink_simulation2.csv'
 
 print("Shape of q:", np.shape(q_csv))
@@ -312,13 +314,9 @@ torquesLE = np.array(torquesLE)
 # torquesLE[np.abs(torquesLE) < threshold] = 0.0
 
     # Create a dictionary with the data
-data = {
-        't1': torques[:, 0],
-        't2': torques[:, 1],
-        't3': torques[:, 2],
-    }
+cols = torques.shape[1] if (hasattr(torques, "ndim") and torques.ndim > 1) else 1
+data = {f't{i+1}': (torques[:, i] if cols > 1 else torques[:]) for i in range(cols)}
 
-    # Create a pandas DataFrame and save to CSV
 df = pd.DataFrame(data)
 df.to_csv('torquesNE.csv', index=False)
 
