@@ -87,7 +87,7 @@ def c_func(i, links, g, q):
  
 
 def tau_input(t): # initial input used
-    return np.array([0 * np.sin(2 * t), 0.25 * np.sin(2 * t), 0.0 * np.sin(2 * t)]) # 0.075 * np.cos(2 * t)............. 2 * np.sin(0.5 * t), 1.5 * np.cos(1.5 * t)
+    return np.array([2 * np.sin(0.5 * t), 1.5 * np.cos(1.5 * t)]) # 0.075 * np.cos(2 * t)............. 2 * np.sin(0.5 * t), 1.5 * np.cos(1.5 * t)
 
 
 def load_joint_data(npy_filename, n, time_int, filetype):
@@ -310,28 +310,12 @@ m2 = 1
 l1 = 1
 l2 = 1
 
-n = 3
+n = 2
 
 g = 9.81
 gravity = np.array([[0, -g, 0, 0]])
 
 # Define the manipulator links: (theta, alpha, length, mass, inertia tensor, joint type: 0 - translational, 1 - rotational, damping coeff.)
-
-
-# links = [
-#     (0, 0, l1, m1, np.array([
-#         [1/3 * m1 * l1**2, 0, 0, -0.5 * m1 * l1],
-#         [0, 0, 0, 0],
-#         [0, 0, 0, 0],
-#         [-0.5 * m1 * l1, 0, 0, m1],
-#     ]), 1, 0.),  # Link 1
-#     (0, 0, l2, m2, np.array([
-#         [1/3 * m2 * l2**2, 0, 0, -0.5 * m2 * l2],
-#         [0, 0, 0, 0],
-#         [0, 0, 0, 0],
-#         [-0.5 * m2 * l2, 0, 0, m2],
-#     ]), 1, 0.)   # Link 2
-# ]
 
 
 links = [
@@ -346,14 +330,30 @@ links = [
         [0, 0, 0, 0],
         [0, 0, 0, 0],
         [-0.5 * m2 * l2, 0, 0, m2],
-    ]), 1, 0.),   # Link 2
-    (0, 0, l2, m2, np.array([
-        [1/3 * m2 * l2**2, 0, 0, -0.5 * m2 * l2],
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-        [-0.5 * m2 * l2, 0, 0, m2],
     ]), 1, 0.)   # Link 2
 ]
+
+
+# links = [
+#     (0, 0, l1, m1, np.array([
+#         [1/3 * m1 * l1**2, 0, 0, -0.5 * m1 * l1],
+#         [0, 0, 0, 0],
+#         [0, 0, 0, 0],
+#         [-0.5 * m1 * l1, 0, 0, m1],
+#     ]), 1, 0.),  # Link 1
+#     (0, 0, l2, m2, np.array([
+#         [1/3 * m2 * l2**2, 0, 0, -0.5 * m2 * l2],
+#         [0, 0, 0, 0],
+#         [0, 0, 0, 0],
+#         [-0.5 * m2 * l2, 0, 0, m2],
+#     ]), 1, 0.),   # Link 2
+#     (0, 0, l2, m2, np.array([
+#         [1/3 * m2 * l2**2, 0, 0, -0.5 * m2 * l2],
+#         [0, 0, 0, 0],
+#         [0, 0, 0, 0],
+#         [-0.5 * m2 * l2, 0, 0, m2],
+#     ]), 1, 0.)   # Link 2
+# ]
 
 
 # links = [
@@ -396,7 +396,7 @@ t_eval = np.linspace(*t_span, n_steps)
 
 # Initial conditions: [theta1, theta2, theta1_dot, theta2_dot]
 # y0 = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0]) # np.pi/2
-y0 = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
+y0 = np.array([0.0, 0.0, 0.0, 0.0])
 
 
 sol = solve_ivp(dynamics, t_span, y0, t_eval=t_eval, method='RK45')
@@ -416,26 +416,45 @@ for i in range(len(sol.t)):
 print(np.shape(sol.y[0]))
 print(np.shape(thetaddot))
 
-plt.figure()
-plt.plot(sol.t, thetaddot[0, :], label='θddot₁')
-plt.plot(sol.t, thetaddot[1, :], label='θddot₂')
-# plt.plot(sol.t, thetaddot[2, :], label='θddot3')
-plt.xlabel('Time [s]')
-plt.ylabel('Acceleration [rad/s^2]')
-plt.title('Forward Dynamics Simulation')
-plt.legend()
+# ...existing code...
+print(np.shape(sol.y[0]))
+print(np.shape(thetaddot))
+
+# Set global defaults (optional)
+lw = 2.5           # line width
+fs = 14            # font size for labels/titles/legend
+plt.rcParams.update({'lines.linewidth': lw, 'font.size': fs})
+
+# Acceleration plot
+plt.figure(figsize=(8,5))
+plt.plot(sol.t, thetaddot[0, :], label=r'$\ddot{\theta}_1$', linewidth=lw)
+plt.plot(sol.t, thetaddot[1, :], label=r'$\ddot{\theta}_2$', linewidth=lw)
+plt.xlabel('Time [s]', fontsize=fs)
+plt.ylabel('Acceleration [rad/s^2]', fontsize=fs)
+plt.title('Forward Dynamics Simulation', fontsize=fs+2)
+plt.legend(fontsize=fs)
 plt.grid()
 
-
-plt.figure()
-plt.plot(sol.t, sol.y[0], label='θ₁')
-plt.plot(sol.t, sol.y[1], label='θ₂')
-# plt.plot(sol.t, sol.y[2], label='θ3')
-plt.xlabel('Time [s]')
-plt.ylabel('Angle [rad]')
-plt.title('Forward Dynamics Simulation')
-plt.legend()
+# Angle plot
+plt.figure(figsize=(8,5))
+plt.plot(sol.t, sol.y[0], label=r'$\theta_1$', linewidth=lw)
+plt.plot(sol.t, sol.y[1], label=r'$\theta_2$', linewidth=lw)
+plt.xlabel('Time [s]', fontsize=fs)
+plt.ylabel('Angle [rad]', fontsize=fs)
+plt.title('Forward Dynamics Simulation', fontsize=fs+2)
+plt.legend(fontsize=fs)
 plt.grid()
+
+# Velocity plot
+plt.figure(figsize=(8,5))
+plt.plot(sol.t, sol.y[2], label=r'$\dot{\theta}_1$', linewidth=lw)
+plt.plot(sol.t, sol.y[3], label=r'$\dot{\theta}_2$', linewidth=lw)
+plt.xlabel('Time [s]', fontsize=fs)
+plt.ylabel('Velocity [rad/s]', fontsize=fs)
+plt.title('Forward Dynamics Simulation', fontsize=fs+2)
+plt.legend(fontsize=fs)
+plt.grid()
+# ...existing code...
 
 
 

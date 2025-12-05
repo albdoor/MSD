@@ -5,8 +5,8 @@ import os
 print(os.getcwd())
 
 # Read the CSV files
-torques_le = pd.read_csv('./torquesLE.csv')
-torques_ne = pd.read_csv('./torquesNE.csv')
+torques_le = pd.read_csv('./ra/torquesLE3.csv')
+torques_ne = pd.read_csv('./ra/torquesNE3.csv')
 
 # Create time vector
 time = np.linspace(0, 10, len(torques_le))
@@ -15,18 +15,25 @@ time = np.linspace(0, 10, len(torques_le))
 n_joints = len(torques_le.columns)
 print(n_joints)
 
+lw = 2.5           # line width
+fs = 16 
+
+plt.rcParams.update({'xtick.labelsize': fs-2, 'ytick.labelsize': fs-2})
+
+
 # Create subplots for each joint
-plt.figure(figsize=(15, 3*n_joints))
+plt.figure(figsize=(15, 1.5*n_joints))
+
 
 # Plot each joint
 for i in range(n_joints):
     plt.subplot(n_joints, 1, i+1)
-    plt.plot(time, torques_le[f't{i+1}'], 'b-', label='Lagrange')
-    plt.plot(time, torques_ne[f't{i+1}'], 'r--', label='Newton-Euler')
-    plt.title(f'Joint {i+1} Torque Comparison')
-    plt.xlabel('Time (s)')
-    plt.ylabel('Torque (Nm)')
-    plt.legend()
+    plt.plot(time, torques_le[f't{i+1}'], 'b-', label='Lagrange', linewidth=lw)
+    plt.plot(time, torques_ne[f't{i+1}'], 'r--', label='Newton-Euler', linewidth=lw)
+    plt.title(f'Joint {i+1} Torque Comparison', fontsize=fs)
+    plt.xlabel('Time (s)', fontsize=fs-1)
+    plt.ylabel('Torque (Nm)', fontsize=fs-1)
+    plt.legend(fontsize=fs-5)
     plt.grid(True)
 
 plt.tight_layout()
@@ -82,3 +89,11 @@ for i in range(n_joints):
     
 plt.show()
     
+
+
+
+# read Hamiltonian
+# add 5 link and 6 link comparison
+
+
+# bar charts comp time vs N links

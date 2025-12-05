@@ -2,6 +2,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import os
+import time
+
 print(os.getcwd())  # Print the current working directory
 print(os.listdir()) # List all files in the current directory
 threshold = 1e-13
@@ -103,7 +105,7 @@ def c_func(i, links, g, q):
 
 
 def tau_input(t): # initial input used
-    return np.array([0, 0.1 * np.sin(1.5 * t), 0.075 * np.cos(2 * t), 0, 0]) # 2 * np.sin(0.5 * t), 1.5 * np.cos(1.5 * t)
+    return np.array([0, 0.1 * np.sin(1.5 * t), 0.075 * np.cos(2 * t), 0, 0, 0, 0, 0, 0, 0, 0]) # 2 * np.sin(0.5 * t), 1.5 * np.cos(1.5 * t)
 
 
 
@@ -300,17 +302,13 @@ def plot_graphs(n, data1, data2):
     plt.figure(figsize=(10, 5))
     for i in range(n):
         plt.subplot(1, n, i+1)    
-        plt.plot(time, data1[:, i], label=f'Torque {i+1} Input')
-        plt.plot(time, data2[:, i], '--r', label=f'Torque {i+1}')
+        plt.plot(time_step, data1[:, i], label=f'Torque {i+1} Input')
+        plt.plot(time_step, data2[:, i], '--r', label=f'Torque {i+1}')
         plt.xlabel('Time (s)')
         plt.ylabel('Torque (Nm)')
         plt.legend()
         plt.title('Joint Torques Over Time')
     plt.show()    
-
-
-
-
 
 
 def recLag(q, qd, qdd, links, gravity):
@@ -327,16 +325,25 @@ def recLag(q, qd, qdd, links, gravity):
         for k in range(n):
             D.append(d_func(i, k, links, q))
     
-    print('************************************* Printing D, h, c *********************************************************')
     D = np.array(D).reshape((n, n))
-    print(D)
     h = np.array(h).reshape((n, 1))
-    print(h)
     c = np.array(c).reshape((n, 1))
-    print(c)
     tau = D @ np.array(qdd).reshape((n, 1)) +  h + c
     return np.ravel(tau)
     # return tau
+
+def link_data(n):
+    links = []
+    m1 = 1.0
+    l1 = 1.0
+    for i in range(n):
+        links.append((0, 0, l1, m1, np.array([
+            [1/3 * m1 * l1**2, 0, 0, -0.5 * m1 * l1],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [-0.5 * m1 * l1, 0, 0, m1],
+        ]), 1, 0.))
+    return links
 
 # 11.07.25
 # try turning off variables D, h, c individually
@@ -350,7 +357,7 @@ m2 = 1
 l1 = 1
 l2 = 1
 
-n = 4
+n = 3
 
 # Define the manipulator links: (theta, alpha, length, mass, inertia tensor, joint type: 0 - translational, 1 - rotational, damping coeff.)
 '''
@@ -370,33 +377,28 @@ links = [
 ]
 '''
 
+links = link_data(n)
 
-links = [
-    (0, 0, l1, m1, np.array([
-        [1/3 * m1 * l1**2, 0, 0, -0.5 * m1 * l1],
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-        [-0.5 * m1 * l1, 0, 0, m1],
-    ]), 1, 0.),  # Link 1
-    (0, 0, l2, m2, np.array([
-        [1/3 * m2 * l2**2, 0, 0, -0.5 * m2 * l2],
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-        [-0.5 * m2 * l2, 0, 0, m2],
-    ]), 1, 0.),   # Link 2
-        (0, 0, l2, m2, np.array([
-        [1/3 * m2 * l2**2, 0, 0, -0.5 * m2 * l2],
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-        [-0.5 * m2 * l2, 0, 0, m2],
-    ]), 1, 0.),   # Link 3
-    (0, 0, l2, m2, np.array([
-        [1/3 * m2 * l2**2, 0, 0, -0.5 * m2 * l2],
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-        [-0.5 * m2 * l2, 0, 0, m2],
-    ]), 1, 0.) 
-]
+# links = [
+#     (0, 0, l1, m1, np.array([
+#         [1/3 * m1 * l1**2, 0, 0, -0.5 * m1 * l1],
+#         [0, 0, 0, 0],
+#         [0, 0, 0, 0],
+#         [-0.5 * m1 * l1, 0, 0, m1],
+#     ]), 1, 0.),  # Link 1
+#     (0, 0, l2, m2, np.array([
+#         [1/3 * m2 * l2**2, 0, 0, -0.5 * m2 * l2],
+#         [0, 0, 0, 0],
+#         [0, 0, 0, 0],
+#         [-0.5 * m2 * l2, 0, 0, m2],
+#     ]), 1, 0.),  # Link 1
+#     (0, 0, l2, m2, np.array([
+#         [1/3 * m2 * l2**2, 0, 0, -0.5 * m2 * l2],
+#         [0, 0, 0, 0],
+#         [0, 0, 0, 0],
+#         [-0.5 * m2 * l2, 0, 0, m2],
+#     ]), 1, 0.)
+# ]
 
 
 
@@ -432,13 +434,13 @@ links = [(0, 0, l1, m1, np.array([
         [0, 0, 0, 0],
     ]), 1, 0.)]
 '''
-time = np.linspace(0, 10, 1000)  # Time steps from 0 to 10 seconds
+time_step = np.linspace(0, 10, 1000)  # Time steps from 0 to 10 seconds
 torques = []
 
 torquesLE = []
 
 
-q_csv, qd_csv, qdd_csv = load_joint_data('./trajectory_data_gen.csv', n, len(time), 'csv') # './providedForward/rl_multilink_simulation.csv'
+q_csv, qd_csv, qdd_csv = load_joint_data('./ra/trajectory_data_gen3.csv', n, len(time_step), 'csv') # './providedForward/rl_multilink_simulation.csv'
 
 # './providedForwardMod/rl_multilink_simulation2.csv' , './data/planarDoublePend.csv'
 
@@ -465,16 +467,22 @@ g = 9.81
 gravity = np.array([[0, -g, 0, 0]])
 
 #range(2): 
+t_total_start = time.perf_counter()
 
-for t_idx in range(len(time)): #len(time)
+
+for t_idx in range(len(time_step)): #len(time)
     q = q_csv[t_idx]   # Joint positions from CSV
     qd = qd_csv[t_idx] # Joint velocities from CSV
     qdd = qdd_csv[t_idx] # Joint accelerations from CSV
-    print('********************************************************* Start of the Program *********************************************************')
     torque = recLag(q, qd, qdd, links, gravity)  # Compute torques using RNEA
     torques.append(torque)
-    torque2 = tau_input(time[t_idx])
+    torque2 = tau_input(time_step[t_idx])
     torquesLE.append(torque2)
+
+t_total_end = time.perf_counter()
+elapsed = t_total_end - t_total_start
+print(f"Total runtime: {elapsed:.4f} s")
+print(f"Average per timestep: {elapsed/len(time_step):.6f} s")
 
 torques = np.array(torques)
 torquesLE = np.array(torquesLE)
@@ -494,7 +502,7 @@ cols = torques.shape[1] if (hasattr(torques, "ndim") and torques.ndim > 1) else 
 data = {f't{i+1}': (torques[:, i] if cols > 1 else torques[:]) for i in range(cols)}
 
 df = pd.DataFrame(data)
-df.to_csv('torquesLE.csv', index=False)
+df.to_csv('./ra/torquesLE3.csv', index=False)
 # ...existing code...
 
 

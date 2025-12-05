@@ -2,12 +2,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import os
+import time
 print(os.getcwd())  # Print the current working directory
 print(os.listdir()) # List all files in the current directory
 threshold = 1e-13
 
 def tau_input(t):
-    return np.array([0.5 * np.sin(3 * t), 0.88 * np.cos(2 * t), 0, 0]) # , 0.075 * np.cos(2 * t) 0.88 * np.cos(2 * t), 0.88 * np.cos(2 * t)
+    return np.array([0.5 * np.sin(3 * t), 0.88 * np.cos(2 * t), 0, 0, 0, 0, 0, 0, 0, 0, 0]) # , 0.075 * np.cos(2 * t) 0.88 * np.cos(2 * t), 0.88 * np.cos(2 * t)
 # 0, 0 * np.sin(1.5 * t), 0 * np.cos(2 * t)
 
 
@@ -154,26 +155,17 @@ def rnea(q, qd, qdd, links, gravity):
     s_bar = []
     for i in range(n):
         theta, alpha, r, m, I, j_type, b = links[i]
-        print('======================= Main Loop ==================================')
-        print(b)
+
         R.append(rotation_matrix(i - 1, i, q, links))
-        print(R[i])
         # print(R[i])
         Rbase.append(rotation_matrix_to_base(q, links, i))
-        print(Rbase[i])
         p_star.append(p_star_vector(q, r, i, i))
-        print(p_star[i])
         s_bar.append(s_vector(q[i], r))
-        print(s_bar[i])
         if i == 0:
             if (j_type):
                 omega[i] =  (R[i].T @ np.array([[0], [0], [qd[i]]])).reshape((3, ))
                 omegad[i] = (R[i].T @ np.array([[0], [0], [qdd[i]]])).reshape((3, ))
                 vd[i] = (np.cross(omegad[i], (p_star[i]).T) + np.cross(omega[i], np.cross(omega[i], p_star[i].T)) + R[i].T @ gravity).reshape((3, ))
-                print('--------------------- i == 0 Case ---------------------------')
-                print(omega[i])
-                print(omegad[i])
-                print(vd[i])
 
             else:   
                 omega[i] = np.zeros(3)
@@ -183,19 +175,15 @@ def rnea(q, qd, qdd, links, gravity):
             # print(vd[i])
         else:
             if (j_type):
-                print('-------------------------- i > 1 Case ------------------------------')
                 omega[i] = (R[i].T @ (omega[i - 1] + np.array([0, 0, qd[i]]))).reshape((3, )) #check
                 omegad[i] = (R[i].T @ (omegad[i - 1] + np.cross(omega[i-1], np.array([0, 0, qd[i]])) + np.array([0, 0, qdd[i]])).reshape((3, ))) #check
                 vd[i] = (R[i].T @ vd[i - 1] + np.cross(omegad[i], (p_star[i]).T) + np.cross(omega[i], np.cross(omega[i], (p_star[i]).T))).reshape((3, )) #check
-                print(omega[i])
-                print(omegad[i])
-                print(vd[i])
+
             else:
                 omega[i] = R[i - 1] @ omega[i - 1]  # No angular motion
                 omegad[i] = R[i - 1] @ omegad[i - 1]
                 vd[i] = R[i - 1] @ vd[i - 1] + R[i] @ np.array([[qdd[i]], [0], [0]])
         a_c[i] = np.cross(omegad[i],  (s_bar[i]).T) + np.cross(omega[i],  np.cross(omega[i],  (s_bar[i]).T)) + vd[i]
-        print(a_c[i])
     # Backward recursion: force & torque propagation
     F = np.zeros((n, 3))  # Force
     N = np.zeros((n, 3))  # Torque
@@ -205,26 +193,20 @@ def rnea(q, qd, qdd, links, gravity):
     
     for i in reversed(range(n)):
         theta, alpha, r, m, I, j_type, b = links[i]
-        print(i)
         if i == n-1:
             F[i] = m * a_c[i]
             N[i] = np.dot(Rbase[i].T @ I @ Rbase[i], omegad[i]) + np.cross(omega[i], np.dot(Rbase[i].T @ I @ Rbase[i], omega[i]))
             f[i] = F[i]
-            print('------------------ Passing Through i = n - 1 -------------------------------------')
             n_torque[i] = np.cross((p_star[i]).T + (s_bar[i]).T, F[i]) + N[i]
-            print(f[i])
-            print(n_torque[i])
+
         else: 
-            print('----------------- Passing Through i < n - 1 -------------------------------')
             F[i] = m * a_c[i]
             N[i] = np.dot(Rbase[i].T @ I @ Rbase[i], omegad[i]) + np.cross(omega[i], np.dot(Rbase[i].T @ I @ Rbase[i], omega[i]))
             f[i] = R[i+1] @ f[i+1] + F[i]
-            n_torque[i] = (R[i+1] @ (n_torque[i+1] + np.cross((p_star_vector(q, r, i+1, i)).T, f[i+1])).T + (np.cross((p_star[i]).T + (s_bar[i]).T, F[i]) + N[i]).T).reshape(3, )
+            n_torque[i] = (R[i+1] @ (n_torque[i+1] + np.cross((np.array([[r*np.cos(q[i+1])], [-r*np.sin(q[i+1])], [0]])).T, f[i+1])).T + (np.cross((p_star[i]).T + (s_bar[i]).T, F[i]) + N[i]).T).reshape(3, )
 
         if j_type == 1:
-            print('--------------------- Passing Through ---------------------------------------')
             tau[i] = np.dot(n_torque[i].reshape(3,), R[i].T @ np.array([0, 0, 1]).T) + b * qd[i]
-            print(tau[i])
         else:  # Prismatic
             tau[i] = np.dot(f[i], R[i].T @ np.array([0, 0, 1])) + b * qd[i]    
     
@@ -232,13 +214,19 @@ def rnea(q, qd, qdd, links, gravity):
 
 
 
+def link_data(n):
+    links = []
+    for i in range(n):
+        links.append((0, 0, 1.0, 1.0, np.diag([0.0, 1/12 * 1, 1/12 * 1]), 1, 0.))
+    return links
+
 
 def plot_graphs(n, data1, data2):
     plt.figure(figsize=(10, 5))
     for i in range(n):
         plt.subplot(1, n, i+1)    
-        plt.plot(time, data1[:, i], label=f'Torque {i} Input')
-        plt.plot(time, data2[:, i], '--r', label=f'Torque {i}')
+        plt.plot(time_step, data1[:, i], label=f'Torque {i} Input')
+        plt.plot(time_step, data2[:, i], '--r', label=f'Torque {i}')
         plt.xlabel('Time (s)')
         plt.ylabel('Torque (Nm)')
         plt.legend()
@@ -248,7 +236,7 @@ def plot_graphs(n, data1, data2):
 
 # Define the manipulator links: (theta, alpha, length, mass, inertia tensor, joint type: 0 - translational, 1 - rotational, damping coeff.)
 # n = 2
-n = 4
+n = 3
 
 # links = [
 #     (0, 0, 1.0, 1.0, np.diag([0.0, 1/12 * 1, 1/12 * 1]), 1, 0.),  # Link 1
@@ -256,26 +244,19 @@ n = 4
 # ]
 
 
-links = [
-    (0, 0, 1.0, 1.0, np.diag([0.0, 1/12 * 1, 1/12 * 1]), 1, 0.),  # Link 1
-    (0, 0, 1.0, 1.0, np.diag([0.0, 1/12 * 1, 1/12 * 1]), 1, 0.),   # Link 2
-    (0, 0, 1.0, 1.0, np.diag([0.0, 1/12 * 1, 1/12 * 1]), 1, 0.),   # Link 2
-    (0, 0, 1.0, 1.0, np.diag([0.0, 1/12 * 1, 1/12 * 1]), 1, 0.)   # Link 2
-    
-]
-
+links = link_data(n)
 # links = [
 #     (0, 0, 1.0, 1.0, np.diag([1, 1, 1]), 1, 0.),  # Link 1
 #     (0, 0, 1.0, 1.0, np.diag([1, 1, 1]), 1, 0.),
 #     (0, 0, 1.0, 1.0, np.diag([1, 1, 1]), 1, 0.)      # Link 2
 # ]
 
-time = np.linspace(0, 10, 1000)  # Time steps from 0 to 10 seconds
+time_step = np.linspace(0, 10, 1000)  # Time steps from 0 to 10 seconds
 torques = []
 
 torquesLE = []
 
-q_csv, qd_csv, qdd_csv = load_joint_data('./trajectory_data_gen.csv', n, len(time), 'csv') # './providedForward/rl_multilink_simulation.csv' './data/LEForw.csv'
+q_csv, qd_csv, qdd_csv = load_joint_data('./ra/trajectory_data_gen3.csv', n, len(time_step), 'csv') # './providedForward/rl_multilink_simulation.csv' './data/LEForw.csv'
 # './providedForwardMod/rl_multilink_simulation2.csv'
 
 print("Shape of q:", np.shape(q_csv))
@@ -298,14 +279,23 @@ print("Type of qdd:", type(qdd_csv))
 g = 9.81
 gravity = np.array([0, g, 0])
 
-for t_idx in range(len(time)): #len(time)
+t_total_start = time.perf_counter()
+
+
+for t_idx in range(len(time_step)): #len(time)
     q = q_csv[t_idx]   # Joint positions from CSV
     qd = qd_csv[t_idx] # Joint velocities from CSV
     qdd = qdd_csv[t_idx] # Joint accelerations from CSV
     torque = rnea(q, qd, qdd, links, gravity)  # Compute torques using RNEA
     torques.append(torque)
-    torque2 = tau_input(time[t_idx])
+    torque2 = tau_input(time_step[t_idx])
     torquesLE.append(torque2)
+
+t_total_end = time.perf_counter()
+elapsed = t_total_end - t_total_start
+print(f"Total runtime: {elapsed:.4f} s")
+print(f"Average per timestep: {elapsed/len(time_step):.6f} s")
+
 
 torques = np.array(torques)
 torquesLE = np.array(torquesLE)
@@ -318,7 +308,7 @@ cols = torques.shape[1] if (hasattr(torques, "ndim") and torques.ndim > 1) else 
 data = {f't{i+1}': (torques[:, i] if cols > 1 else torques[:]) for i in range(cols)}
 
 df = pd.DataFrame(data)
-df.to_csv('torquesNE.csv', index=False)
+df.to_csv('./ra/torquesNE3.csv', index=False)
 
 
 

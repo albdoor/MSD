@@ -103,7 +103,7 @@ def c_func(i, links, g, q):
 
 
 def tau_input(t): # initial input used
-    return np.array([0, 0.1 * np.sin(1.5 * t), 0.075 * np.cos(2 * t)]) # 2 * np.sin(0.5 * t), 1.5 * np.cos(1.5 * t)
+    return np.array([2 * np.sin(0.5 * t), 1.5 * np.cos(1.5 * t)]) # 2 * np.sin(0.5 * t), 1.5 * np.cos(1.5 * t)
 
 
 
@@ -297,13 +297,16 @@ def Q_mat():
     ])
 
 def plot_graphs(n, data1, data2):
+    lw = 2.5           # line width
+    fs = 16 
+    plt.rcParams.update({'xtick.labelsize': fs-2, 'ytick.labelsize': fs-2})
     plt.figure(figsize=(10, 5))
     for i in range(n):
         plt.subplot(1, n, i+1)    
-        plt.plot(time, data1[:, i], label=f'Torque {i+1} Input')
-        plt.plot(time, data2[:, i], '--r', label=f'Torque {i+1}')
-        plt.xlabel('Time (s)')
-        plt.ylabel('Torque (Nm)')
+        plt.plot(time, data1[:, i], label=f'Torque {i+1} Input', linewidth=lw)
+        plt.plot(time, data2[:, i], '--r', label=f'Torque {i+1}', linewidth=lw)
+        plt.xlabel('Time (s)', fontsize=fs)
+        plt.ylabel('Torque (Nm)', fontsize=fs)
         plt.legend()
         plt.title('Joint Torques Over Time')
     plt.show()    

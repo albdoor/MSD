@@ -69,7 +69,7 @@ if __name__ == "__main__":
     t_start = 0
     t_end = 10
     n_points = 1000
-    n_links = 4  # Number of links
+    n_links = 10  # Number of links
     t = np.linspace(t_start, t_end, n_points)
 
     # Generate trajectory
@@ -91,7 +91,7 @@ if __name__ == "__main__":
 
     # Create a pandas DataFrame and save to CSV
     df = pd.DataFrame(data)
-    df.to_csv('trajectory_data_gen.csv', index=False)
+    df.to_csv('./ra/trajectory_data_gen10.csv', index=False)
 
     # Plot the results
     graphs(q, qd, qdd, t)
