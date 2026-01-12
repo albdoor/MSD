@@ -217,7 +217,7 @@ def rnea(q, qd, qdd, links, gravity):
 def link_data(n):
     links = []
     for i in range(n):
-        links.append((0, 0, 1.0, 1.0, np.diag([0.0, 1/12 * 1, 1/12 * 1]), 1, 0.))
+        links.append((0, 0, 1.0, 1.0, np.diag([0, 1/12 * 1, 1/12 * 1]), 1, 0.))
     return links
 
 
@@ -256,7 +256,12 @@ torques = []
 
 torquesLE = []
 
-q_csv, qd_csv, qdd_csv = load_joint_data('./ra/trajectory_data_gen3.csv', n, len(time_step), 'csv') # './providedForward/rl_multilink_simulation.csv' './data/LEForw.csv'
+
+out_dir = './ra'
+
+trj_data = f"{out_dir}/trajectory_data_gen{n}.csv"
+
+q_csv, qd_csv, qdd_csv = load_joint_data(trj_data, n, len(time_step), 'csv') # './providedForward/rl_multilink_simulation.csv' './data/LEForw.csv'
 # './providedForwardMod/rl_multilink_simulation2.csv'
 
 print("Shape of q:", np.shape(q_csv))
@@ -282,19 +287,27 @@ gravity = np.array([0, g, 0])
 t_total_start = time.perf_counter()
 
 
-for t_idx in range(len(time_step)): #len(time)
-    q = q_csv[t_idx]   # Joint positions from CSV
-    qd = qd_csv[t_idx] # Joint velocities from CSV
-    qdd = qdd_csv[t_idx] # Joint accelerations from CSV
-    torque = rnea(q, qd, qdd, links, gravity)  # Compute torques using RNEA
-    torques.append(torque)
-    torque2 = tau_input(time_step[t_idx])
-    torquesLE.append(torque2)
+def rneagen(time_step, q_csv, qd_csv, qdd_csv, links, gravity):
+    for t_idx in range(len(time_step)): #len(time)
+        q = q_csv[t_idx]   # Joint positions from CSV
+        qd = qd_csv[t_idx] # Joint velocities from CSV
+        qdd = qdd_csv[t_idx] # Joint accelerations from CSV
+        torque = rnea(q, qd, qdd, links, gravity)  # Compute torques using RNEA
+        torques.append(torque)
+        torque2 = tau_input(time_step[t_idx])
+        torquesLE.append(torque2)
+        
+    return torques, torquesLE
+
+
+torques, torquesLE = rneagen(time_step, q_csv, qd_csv, qdd_csv, links, gravity)
+
 
 t_total_end = time.perf_counter()
 elapsed = t_total_end - t_total_start
 print(f"Total runtime: {elapsed:.4f} s")
 print(f"Average per timestep: {elapsed/len(time_step):.6f} s")
+
 
 
 torques = np.array(torques)
@@ -308,7 +321,11 @@ cols = torques.shape[1] if (hasattr(torques, "ndim") and torques.ndim > 1) else 
 data = {f't{i+1}': (torques[:, i] if cols > 1 else torques[:]) for i in range(cols)}
 
 df = pd.DataFrame(data)
-df.to_csv('./ra/torquesNE3.csv', index=False)
+
+torque_data = f"{out_dir}/torquesNE{n}.csv"
+
+
+df.to_csv(torque_data, index=False)
 
 
 
@@ -342,3 +359,8 @@ plot_graphs(n, torquesLE, torques)
 # 15.08.25
 # check the indices
 # send the code
+
+
+
+# 12.12
+# Featherstone's general implementation

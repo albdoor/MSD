@@ -429,7 +429,7 @@ torques = []
 torquesLE = []
 
 
-q_csv, qd_csv, qdd_csv = load_joint_data('./data/planarDoublePend.csv', n, len(time), 'csv') # './providedForward/rl_multilink_simulation.csv'
+q_csv, qd_csv, qdd_csv = load_joint_data('./ra/trajectory_data_gen2.csv', n, len(time), 'csv') # './providedForward/rl_multilink_simulation.csv'
 
 # './providedForwardMod/rl_multilink_simulation2.csv' , './data/planarDoublePend.csv'
 

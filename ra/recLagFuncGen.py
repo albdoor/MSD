@@ -350,7 +350,8 @@ def link_data(n):
 # figure out which matrix generates oscillations
 # run the 2, 3, 5 links system for LE, RNEA, based on the obtained data
 # 
-
+# 8.12.25
+# check the moment of inertia values from the textbook definitions of vars
 
 m1 = 1
 m2 = 1
@@ -439,8 +440,11 @@ torques = []
 
 torquesLE = []
 
+out_dir = './ra'
 
-q_csv, qd_csv, qdd_csv = load_joint_data('./ra/trajectory_data_gen3.csv', n, len(time_step), 'csv') # './providedForward/rl_multilink_simulation.csv'
+trj_data = f"{out_dir}/trajectory_data_gen{n}.csv"
+
+q_csv, qd_csv, qdd_csv = load_joint_data(trj_data, n, len(time_step), 'csv') # './providedForward/rl_multilink_simulation.csv'
 
 # './providedForwardMod/rl_multilink_simulation2.csv' , './data/planarDoublePend.csv'
 
@@ -470,19 +474,27 @@ gravity = np.array([[0, -g, 0, 0]])
 t_total_start = time.perf_counter()
 
 
-for t_idx in range(len(time_step)): #len(time)
-    q = q_csv[t_idx]   # Joint positions from CSV
-    qd = qd_csv[t_idx] # Joint velocities from CSV
-    qdd = qdd_csv[t_idx] # Joint accelerations from CSV
-    torque = recLag(q, qd, qdd, links, gravity)  # Compute torques using RNEA
-    torques.append(torque)
-    torque2 = tau_input(time_step[t_idx])
-    torquesLE.append(torque2)
+def langFuncGen(time_step, q_csv, qd_csv, qdd_csv, links, gravity):
+    for t_idx in range(len(time_step)): #len(time)
+        q = q_csv[t_idx]   # Joint positions from CSV
+        qd = qd_csv[t_idx] # Joint velocities from CSV
+        qdd = qdd_csv[t_idx] # Joint accelerations from CSV
+        torque = recLag(q, qd, qdd, links, gravity)  # Compute torques using RNEA
+        torques.append(torque)
+        torque2 = tau_input(time_step[t_idx])
+        torquesLE.append(torque2)
+    
+    return torques, torquesLE
+
+
+torques, torquesLE = langFuncGen(time_step, q_csv, qd_csv, qdd_csv, links, gravity)
+
 
 t_total_end = time.perf_counter()
 elapsed = t_total_end - t_total_start
 print(f"Total runtime: {elapsed:.4f} s")
 print(f"Average per timestep: {elapsed/len(time_step):.6f} s")
+
 
 torques = np.array(torques)
 torquesLE = np.array(torquesLE)
@@ -502,7 +514,10 @@ cols = torques.shape[1] if (hasattr(torques, "ndim") and torques.ndim > 1) else 
 data = {f't{i+1}': (torques[:, i] if cols > 1 else torques[:]) for i in range(cols)}
 
 df = pd.DataFrame(data)
-df.to_csv('./ra/torquesLE3.csv', index=False)
+
+torque_data = f"{out_dir}/torquesLE{n}.csv"
+
+df.to_csv(torque_data, index=False)
 # ...existing code...
 
 

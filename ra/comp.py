@@ -5,8 +5,18 @@ import os
 print(os.getcwd())
 
 # Read the CSV files
-torques_le = pd.read_csv('./ra/torquesLE3.csv')
-torques_ne = pd.read_csv('./ra/torquesNE3.csv')
+n = 3
+
+out_dir = './ra'
+
+csv_name_le= f"{out_dir}/torquesLE{n}.csv"
+csv_name_ne= f"{out_dir}/torquesNE{n}.csv"
+csv_name_fst= f"{out_dir}/torquesFst{n}.csv"
+
+
+torques_le = pd.read_csv(csv_name_le)
+torques_ne = pd.read_csv(csv_name_ne)
+torques_fst = pd.read_csv(csv_name_fst)
 
 # Create time vector
 time = np.linspace(0, 10, len(torques_le))
@@ -30,6 +40,7 @@ for i in range(n_joints):
     plt.subplot(n_joints, 1, i+1)
     plt.plot(time, torques_le[f't{i+1}'], 'b-', label='Lagrange', linewidth=lw)
     plt.plot(time, torques_ne[f't{i+1}'], 'r--', label='Newton-Euler', linewidth=lw)
+    plt.plot(time, torques_fst[f't{i+1}'], 'g-.', label='Featherstone', linewidth=lw)
     plt.title(f'Joint {i+1} Torque Comparison', fontsize=fs)
     plt.xlabel('Time (s)', fontsize=fs-1)
     plt.ylabel('Torque (Nm)', fontsize=fs-1)

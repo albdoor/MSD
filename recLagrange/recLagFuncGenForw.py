@@ -294,6 +294,19 @@ def dynamics(t, y):
     return np.concatenate([thetadot, theta_ddot])
 
 
+def link_data(n):
+    links = []
+    m1 = 1.0
+    l1 = 1.0
+    for i in range(n):
+        links.append((0, 0, l1, m1, np.array([
+            [1/3 * m1 * l1**2, 0, 0, -0.5 * m1 * l1],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [-0.5 * m1 * l1, 0, 0, m1],
+        ]), 1, 0.))
+    return links
+
 
 # 11.07.25
 # try turning off variables D, h, c individually
@@ -318,20 +331,7 @@ gravity = np.array([[0, -g, 0, 0]])
 # Define the manipulator links: (theta, alpha, length, mass, inertia tensor, joint type: 0 - translational, 1 - rotational, damping coeff.)
 
 
-links = [
-    (0, 0, l1, m1, np.array([
-        [1/3 * m1 * l1**2, 0, 0, -0.5 * m1 * l1],
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-        [-0.5 * m1 * l1, 0, 0, m1],
-    ]), 1, 0.),  # Link 1
-    (0, 0, l2, m2, np.array([
-        [1/3 * m2 * l2**2, 0, 0, -0.5 * m2 * l2],
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-        [-0.5 * m2 * l2, 0, 0, m2],
-    ]), 1, 0.)   # Link 2
-]
+links = link_data(n)
 
 
 # links = [
