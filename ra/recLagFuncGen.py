@@ -352,262 +352,263 @@ def link_data(n):
 # 
 # 8.12.25
 # check the moment of inertia values from the textbook definitions of vars
+if __name__ == "__main__":
+
+    m1 = 1
+    m2 = 1
+    l1 = 1
+    l2 = 1
+
+    n = 2
+
+    # Define the manipulator links: (theta, alpha, length, mass, inertia tensor, joint type: 0 - translational, 1 - rotational, damping coeff.)
+    '''
+    links = [
+        (0, 0, l1, m1, np.array([
+            [1, 0, 0, 0],
+            [0, 1, 0, 0],
+            [0, 0, 1, 0],
+            [0, 0, 0, 1],
+        ]), 1, 0.),  # Link 1
+        (0, 0, l2, m2, np.array([
+            [1, 0, 0, 0],
+            [0, 1, 0, 0],
+            [0, 0, 1, 0],
+            [0, 0, 0, 1],
+        ]), 1, 0.)
+    ]
+    '''
+
+    links = link_data(n)
+
+    # links = [
+    #     (0, 0, l1, m1, np.array([
+    #         [1/3 * m1 * l1**2, 0, 0, -0.5 * m1 * l1],
+    #         [0, 0, 0, 0],
+    #         [0, 0, 0, 0],
+    #         [-0.5 * m1 * l1, 0, 0, m1],
+    #     ]), 1, 0.),  # Link 1
+    #     (0, 0, l2, m2, np.array([
+    #         [1/3 * m2 * l2**2, 0, 0, -0.5 * m2 * l2],
+    #         [0, 0, 0, 0],
+    #         [0, 0, 0, 0],
+    #         [-0.5 * m2 * l2, 0, 0, m2],
+    #     ]), 1, 0.),  # Link 1
+    #     (0, 0, l2, m2, np.array([
+    #         [1/3 * m2 * l2**2, 0, 0, -0.5 * m2 * l2],
+    #         [0, 0, 0, 0],
+    #         [0, 0, 0, 0],
+    #         [-0.5 * m2 * l2, 0, 0, m2],
+    #     ]), 1, 0.)
+    # ]
+
+
+
+
+    # links = [
+    #     (0, 0, 1, 1, np.array([
+    #         [1, 0, 0, 0],
+    #         [0, 1, 0, 0],
+    #         [0, 0, 1, 0],
+    #         [0, 0, 0, 1],
+    #     ]), 1, 0.),  # Link 1
+    #     (0, 0, 1, 1, np.array([
+    #         [1, 0, 0, 0],
+    #         [0, 1, 0, 0],
+    #         [0, 0, 1, 0],
+    #         [0, 0, 0, 1],
+    #     ]), 1, 0.),   # Link 2
+    #     (0, 0, 1, 1, np.array([
+    #         [m1 * l1**2, 0, 0, 0],
+    #         [0, 1, 0, 0],
+    #         [0, 0, 1, 0],
+    #         [0, 0, 0, m1],
+    #     ]), 1, 0.)
+    # ]
 
-m1 = 1
-m2 = 1
-l1 = 1
-l2 = 1
-
-n = 3
-
-# Define the manipulator links: (theta, alpha, length, mass, inertia tensor, joint type: 0 - translational, 1 - rotational, damping coeff.)
-'''
-links = [
-    (0, 0, l1, m1, np.array([
-        [1, 0, 0, 0],
-        [0, 1, 0, 0],
-        [0, 0, 1, 0],
-        [0, 0, 0, 1],
-    ]), 1, 0.),  # Link 1
-    (0, 0, l2, m2, np.array([
-        [1, 0, 0, 0],
-        [0, 1, 0, 0],
-        [0, 0, 1, 0],
-        [0, 0, 0, 1],
-    ]), 1, 0.)
-]
-'''
-
-links = link_data(n)
-
-# links = [
-#     (0, 0, l1, m1, np.array([
-#         [1/3 * m1 * l1**2, 0, 0, -0.5 * m1 * l1],
-#         [0, 0, 0, 0],
-#         [0, 0, 0, 0],
-#         [-0.5 * m1 * l1, 0, 0, m1],
-#     ]), 1, 0.),  # Link 1
-#     (0, 0, l2, m2, np.array([
-#         [1/3 * m2 * l2**2, 0, 0, -0.5 * m2 * l2],
-#         [0, 0, 0, 0],
-#         [0, 0, 0, 0],
-#         [-0.5 * m2 * l2, 0, 0, m2],
-#     ]), 1, 0.),  # Link 1
-#     (0, 0, l2, m2, np.array([
-#         [1/3 * m2 * l2**2, 0, 0, -0.5 * m2 * l2],
-#         [0, 0, 0, 0],
-#         [0, 0, 0, 0],
-#         [-0.5 * m2 * l2, 0, 0, m2],
-#     ]), 1, 0.)
-# ]
-
-
-
-
-# links = [
-#     (0, 0, 1, 1, np.array([
-#         [1, 0, 0, 0],
-#         [0, 1, 0, 0],
-#         [0, 0, 1, 0],
-#         [0, 0, 0, 1],
-#     ]), 1, 0.),  # Link 1
-#     (0, 0, 1, 1, np.array([
-#         [1, 0, 0, 0],
-#         [0, 1, 0, 0],
-#         [0, 0, 1, 0],
-#         [0, 0, 0, 1],
-#     ]), 1, 0.),   # Link 2
-#     (0, 0, 1, 1, np.array([
-#         [m1 * l1**2, 0, 0, 0],
-#         [0, 1, 0, 0],
-#         [0, 0, 1, 0],
-#         [0, 0, 0, m1],
-#     ]), 1, 0.)
-# ]
 
 
+    '''
+    links = [(0, 0, l1, m1, np.array([
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+            [0, 0, 0, 0],
+        ]), 1, 0.)]
+    '''
+    time_step = np.linspace(0, 10, 1000)  # Time steps from 0 to 10 seconds
+    torques = []
 
-'''
-links = [(0, 0, l1, m1, np.array([
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-        [0, 0, 0, 0],
-    ]), 1, 0.)]
-'''
-time_step = np.linspace(0, 10, 1000)  # Time steps from 0 to 10 seconds
-torques = []
+    torquesLE = []
 
-torquesLE = []
+    out_dir = './ra'
 
-out_dir = './ra'
+    trj_data = f"{out_dir}/trajectory_data_gen{n}.csv"
 
-trj_data = f"{out_dir}/trajectory_data_gen{n}.csv"
+    q_csv, qd_csv, qdd_csv = load_joint_data(trj_data, n, len(time_step), 'csv') # './providedForward/rl_multilink_simulation.csv'
 
-q_csv, qd_csv, qdd_csv = load_joint_data(trj_data, n, len(time_step), 'csv') # './providedForward/rl_multilink_simulation.csv'
+    # './providedForwardMod/rl_multilink_simulation2.csv' , './data/planarDoublePend.csv'
 
-# './providedForwardMod/rl_multilink_simulation2.csv' , './data/planarDoublePend.csv'
+    print("Shape of q:", np.shape(q_csv))
+    print("Shape of qd:", np.shape(qd_csv))
+    print("Shape of qdd:", np.shape(qdd_csv))
 
-print("Shape of q:", np.shape(q_csv))
-print("Shape of qd:", np.shape(qd_csv))
-print("Shape of qdd:", np.shape(qdd_csv))
 
+    print("Type of q:", type(q_csv))
+    print("Type of qd:", type(qd_csv))
+    print("Type of qdd:", type(qdd_csv))
 
-print("Type of q:", type(q_csv))
-print("Type of qd:", type(qd_csv))
-print("Type of qdd:", type(qdd_csv))
 
+    # def random_q(t):
+    #     return np.sin(t) + 0.5 * np.cos(0.5 * t)
 
-# def random_q(t):
-#     return np.sin(t) + 0.5 * np.cos(0.5 * t)
+    # def random_qd(t):
+    #     return np.cos(t) - 0.25 * np.sin(0.5 * t)
 
-# def random_qd(t):
-#     return np.cos(t) - 0.25 * np.sin(0.5 * t)
+    # def random_qdd(t):
+    #     return -np.sin(t) - 0.125 * np.cos(0.5 * t)
 
-# def random_qdd(t):
-#     return -np.sin(t) - 0.125 * np.cos(0.5 * t)
+    g = 9.81
+    gravity = np.array([[0, -g, 0, 0]])
 
-g = 9.81
-gravity = np.array([[0, -g, 0, 0]])
+    #range(2): 
+    t_total_start = time.perf_counter()
 
-#range(2): 
-t_total_start = time.perf_counter()
 
+    def langFuncGen(time_step, q_csv, qd_csv, qdd_csv, links, gravity):
+        for t_idx in range(len(time_step)): #len(time)
+            q = q_csv[t_idx]   # Joint positions from CSV
+            qd = qd_csv[t_idx] # Joint velocities from CSV
+            qdd = qdd_csv[t_idx] # Joint accelerations from CSV
+            torque = recLag(q, qd, qdd, links, gravity)  # Compute torques using RNEA
+            torques.append(torque)
+            torque2 = tau_input(time_step[t_idx])
+            torquesLE.append(torque2)
+        
+        return torques, torquesLE
 
-def langFuncGen(time_step, q_csv, qd_csv, qdd_csv, links, gravity):
-    for t_idx in range(len(time_step)): #len(time)
-        q = q_csv[t_idx]   # Joint positions from CSV
-        qd = qd_csv[t_idx] # Joint velocities from CSV
-        qdd = qdd_csv[t_idx] # Joint accelerations from CSV
-        torque = recLag(q, qd, qdd, links, gravity)  # Compute torques using RNEA
-        torques.append(torque)
-        torque2 = tau_input(time_step[t_idx])
-        torquesLE.append(torque2)
-    
-    return torques, torquesLE
 
+    torques, torquesLE = langFuncGen(time_step, q_csv, qd_csv, qdd_csv, links, gravity)
 
-torques, torquesLE = langFuncGen(time_step, q_csv, qd_csv, qdd_csv, links, gravity)
 
+    t_total_end = time.perf_counter()
+    elapsed = t_total_end - t_total_start
+    print(f"Total runtime: {elapsed:.4f} s")
+    print(f"Average per timestep: {elapsed/len(time_step):.6f} s")
 
-t_total_end = time.perf_counter()
-elapsed = t_total_end - t_total_start
-print(f"Total runtime: {elapsed:.4f} s")
-print(f"Average per timestep: {elapsed/len(time_step):.6f} s")
 
+    torques = np.array(torques)
+    torquesLE = np.array(torquesLE)
 
-torques = np.array(torques)
-torquesLE = np.array(torquesLE)
+    print("Shape of torques:", np.shape(torques))
 
-print("Shape of torques:", np.shape(torques))
 
+    torques[np.abs(torques) < threshold] = 0.0
+    torquesLE[np.abs(torquesLE) < threshold] = 0.0
 
-torques[np.abs(torques) < threshold] = 0.0
-torquesLE[np.abs(torquesLE) < threshold] = 0.0
 
+    print("Shape of torques:", np.shape(torquesLE))
+        # Create a dictionary with the data
+    # ...existing code...
+    # Dynamically build CSV columns for the number of torques present
+    cols = torques.shape[1] if (hasattr(torques, "ndim") and torques.ndim > 1) else 1
+    data = {f't{i+1}': (torques[:, i] if cols > 1 else torques[:]) for i in range(cols)}
 
-print("Shape of torques:", np.shape(torquesLE))
-    # Create a dictionary with the data
-# ...existing code...
-# Dynamically build CSV columns for the number of torques present
-cols = torques.shape[1] if (hasattr(torques, "ndim") and torques.ndim > 1) else 1
-data = {f't{i+1}': (torques[:, i] if cols > 1 else torques[:]) for i in range(cols)}
+    df = pd.DataFrame(data)
 
-df = pd.DataFrame(data)
+    torque_data = f"{out_dir}/torquesLE{n}.csv"
 
-torque_data = f"{out_dir}/torquesLE{n}.csv"
+    df.to_csv(torque_data, index=False)
+    # ...existing code...
 
-df.to_csv(torque_data, index=False)
-# ...existing code...
 
+    plot_graphs(n, torquesLE, torques)
+    # Plot the torques
 
-plot_graphs(n, torquesLE, torques)
-# Plot the torques
+    # plt.figure(figsize=(15, 5))
 
-# plt.figure(figsize=(15, 5))
 
+    # plt.subplot(1, 3, 1)
+    # plt.plot(time, torques[:, 0], '--b', label='Torque 1')
+    # plt.plot(time, torquesLE[:, 0], label='Torque 1 Input')
+    # plt.plot(time, torques[:, 1], '--g', label='Torque 2')
+    # plt.plot(time, torquesLE[:, 1], label='Torque 2 Input')
+    # plt.xlabel('Time (s)')
+    # plt.ylabel('Torque (Nm)')
+    # plt.legend()
+    # plt.title('Joint Torques Over Time')
 
-# plt.subplot(1, 3, 1)
-# plt.plot(time, torques[:, 0], '--b', label='Torque 1')
-# plt.plot(time, torquesLE[:, 0], label='Torque 1 Input')
-# plt.plot(time, torques[:, 1], '--g', label='Torque 2')
-# plt.plot(time, torquesLE[:, 1], label='Torque 2 Input')
-# plt.xlabel('Time (s)')
-# plt.ylabel('Torque (Nm)')
-# plt.legend()
-# plt.title('Joint Torques Over Time')
+    # plt.subplot(1, 2, 1)
+    # plt.plot(time, torques[:, 0], label='Torque 1')
+    # plt.plot(time, torquesLE[:, 0], '--r', label='Torque 1 Input')
+    # plt.xlabel('Time (s)')
+    # plt.ylabel('Torque (Nm)')
+    # plt.legend()
+    # plt.title('Joint Torques Over Time')
 
-# plt.subplot(1, 2, 1)
-# plt.plot(time, torques[:, 0], label='Torque 1')
-# plt.plot(time, torquesLE[:, 0], '--r', label='Torque 1 Input')
-# plt.xlabel('Time (s)')
-# plt.ylabel('Torque (Nm)')
-# plt.legend()
-# plt.title('Joint Torques Over Time')
+    '''
 
-'''
+    plt.subplot(1, 2, 2)
+    plt.plot(time, torques[:, 1], label='Torque 2')
+    plt.plot(time, torquesLE[:, 1], '--r', label='Torque 2 Input')
+    # plt.plot(time, q_csv[:, 1], label='q2')
+    plt.xlabel('Time (s)')
+    plt.ylabel('Torque (Nm)')
+    plt.legend()
+    plt.title('Joint Torques Over Time')
+    '''
+    # plt.show()
 
-plt.subplot(1, 2, 2)
-plt.plot(time, torques[:, 1], label='Torque 2')
-plt.plot(time, torquesLE[:, 1], '--r', label='Torque 2 Input')
-# plt.plot(time, q_csv[:, 1], label='q2')
-plt.xlabel('Time (s)')
-plt.ylabel('Torque (Nm)')
-plt.legend()
-plt.title('Joint Torques Over Time')
-'''
-# plt.show()
 
 
 
 
+    # 5-link planar pendulum for both NE and LE
+    # non-zero input (torque) only for the first link
+    # zero for others
 
-# 5-link planar pendulum for both NE and LE
-# non-zero input (torque) only for the first link
-# zero for others
 
+    # 27.06.25
+    # 1 link system for NE and LE 
+    # And then 2 link system 
 
-# 27.06.25
-# 1 link system for NE and LE 
-# And then 2 link system 
 
+    # two-link system
+    # reduce the mass of 2nd link gradually
+    # 1/2 of the 1sy mass, 1/4, and so forth
+    # check the iteration of the link code
+    # check the index notation
+    # try debugging line-by-line
+    # search in the internet 
 
-# two-link system
-# reduce the mass of 2nd link gradually
-# 1/2 of the 1sy mass, 1/4, and so forth
-# check the iteration of the link code
-# check the index notation
-# try debugging line-by-line
-# search in the internet 
 
 
 
+    # 17.07.25
+    # RNEA modified for general cases: for n-number of links, and for revolute joints and prismatic joints
+    # Test RNEA and LE
+    # Use data from forward simulation and use for RNEA and LE: from n=1 ... 5
+    # 
+    # 
+    # 23.07.25
+    # for each sample time, calculate the matrices M, C, G - D, C, H
+    # extract values of these matrices
+    # separate code for D, C, H
 
-# 17.07.25
-# RNEA modified for general cases: for n-number of links, and for revolute joints and prismatic joints
-# Test RNEA and LE
-# Use data from forward simulation and use for RNEA and LE: from n=1 ... 5
-# 
-# 
-# 23.07.25
-# for each sample time, calculate the matrices M, C, G - D, C, H
-# extract values of these matrices
-# separate code for D, C, H
 
+    # make sure that the absolute angles are used
+    # Dias' code may be with general frame
+    # make sure that it is with local frame 
 
-# make sure that the absolute angles are used
-# Dias' code may be with general frame
-# make sure that it is with local frame 
 
 
+    # 29.07.25
+    # forward simu for 3-link 
+    # x = [ q qd] xd = [qd qdd] = [qd -M-1 (C*qd + D*qd + G - tau) ]
+    # Put coefficients for 
+    # gammai = {1, 0}
+    # General NE
+    # 
 
-# 29.07.25
-# forward simu for 3-link 
-# x = [ q qd] xd = [qd qdd] = [qd -M-1 (C*qd + D*qd + G - tau) ]
-# Put coefficients for 
-# gammai = {1, 0}
-# General NE
-# 
-
-# 6.08.25
-# Rec NE general case
+    # 6.08.25
+    # Rec NE general case

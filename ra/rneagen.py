@@ -217,7 +217,10 @@ def rnea(q, qd, qdd, links, gravity):
 def link_data(n):
     links = []
     for i in range(n):
-        links.append((0, 0, 1.0, 1.0, np.diag([0, 1/12 * 1, 1/12 * 1]), 1, 0.))
+        if i == 2:
+            links.append((0, 0, 1, 0.001, np.diag([0, 1/12 * 1, 1/12 * 1]), 1, 0.))
+        else:
+            links.append((0, 0, 1.0, 1.0, np.diag([0, 1/12 * 1, 1/12 * 1]), 1, 0.))
     return links
 
 
@@ -234,133 +237,135 @@ def plot_graphs(n, data1, data2):
     plt.show()    
 
 
-# Define the manipulator links: (theta, alpha, length, mass, inertia tensor, joint type: 0 - translational, 1 - rotational, damping coeff.)
-# n = 2
-n = 3
+if __name__ == "__main__":
 
-# links = [
-#     (0, 0, 1.0, 1.0, np.diag([0.0, 1/12 * 1, 1/12 * 1]), 1, 0.),  # Link 1
-#     (0, 0, 1.0, 1.0, np.diag([0.0, 1/12 * 1, 1/12 * 1]), 1, 0.)   # Link 2
-# ]
+    # Define the manipulator links: (theta, alpha, length, mass, inertia tensor, joint type: 0 - translational, 1 - rotational, damping coeff.)
+    # n = 2
+    n = 3
 
-
-links = link_data(n)
-# links = [
-#     (0, 0, 1.0, 1.0, np.diag([1, 1, 1]), 1, 0.),  # Link 1
-#     (0, 0, 1.0, 1.0, np.diag([1, 1, 1]), 1, 0.),
-#     (0, 0, 1.0, 1.0, np.diag([1, 1, 1]), 1, 0.)      # Link 2
-# ]
-
-time_step = np.linspace(0, 10, 1000)  # Time steps from 0 to 10 seconds
-torques = []
-
-torquesLE = []
+    # links = [
+    #     (0, 0, 1.0, 1.0, np.diag([0.0, 1/12 * 1, 1/12 * 1]), 1, 0.),  # Link 1
+    #     (0, 0, 1.0, 1.0, np.diag([0.0, 1/12 * 1, 1/12 * 1]), 1, 0.)   # Link 2
+    # ]
 
 
-out_dir = './ra'
+    links = link_data(n)
+    # links = [
+    #     (0, 0, 1.0, 1.0, np.diag([1, 1, 1]), 1, 0.),  # Link 1
+    #     (0, 0, 1.0, 1.0, np.diag([1, 1, 1]), 1, 0.),
+    #     (0, 0, 1.0, 1.0, np.diag([1, 1, 1]), 1, 0.)      # Link 2
+    # ]
 
-trj_data = f"{out_dir}/trajectory_data_gen{n}.csv"
+    time_step = np.linspace(0, 10, 1000)  # Time steps from 0 to 10 seconds
+    torques = []
 
-q_csv, qd_csv, qdd_csv = load_joint_data(trj_data, n, len(time_step), 'csv') # './providedForward/rl_multilink_simulation.csv' './data/LEForw.csv'
-# './providedForwardMod/rl_multilink_simulation2.csv'
-
-print("Shape of q:", np.shape(q_csv))
-print("Shape of qd:", np.shape(qd_csv))
-print("Shape of qdd:", np.shape(qdd_csv))
-
-print("Type of q:", type(q_csv))
-print("Type of qd:", type(qd_csv))
-print("Type of qdd:", type(qdd_csv))
-
-# def random_q(t):
-#     return np.sin(t) + 0.5 * np.cos(0.5 * t)
-
-# def random_qd(t):
-#     return np.cos(t) - 0.25 * np.sin(0.5 * t)
-
-# def random_qdd(t):
-#     return -np.sin(t) - 0.125 * np.cos(0.5 * t)
-
-g = 9.81
-gravity = np.array([0, g, 0])
-
-t_total_start = time.perf_counter()
+    torquesLE = []
 
 
-def rneagen(time_step, q_csv, qd_csv, qdd_csv, links, gravity):
-    for t_idx in range(len(time_step)): #len(time)
-        q = q_csv[t_idx]   # Joint positions from CSV
-        qd = qd_csv[t_idx] # Joint velocities from CSV
-        qdd = qdd_csv[t_idx] # Joint accelerations from CSV
-        torque = rnea(q, qd, qdd, links, gravity)  # Compute torques using RNEA
-        torques.append(torque)
-        torque2 = tau_input(time_step[t_idx])
-        torquesLE.append(torque2)
-        
-    return torques, torquesLE
+    out_dir = './ra'
+
+    trj_data = f"{out_dir}/trajectory_data_gen{n}.csv"
+
+    q_csv, qd_csv, qdd_csv = load_joint_data(trj_data, n, len(time_step), 'csv') # './providedForward/rl_multilink_simulation.csv' './data/LEForw.csv'
+    # './providedForwardMod/rl_multilink_simulation2.csv'
+
+    print("Shape of q:", np.shape(q_csv))
+    print("Shape of qd:", np.shape(qd_csv))
+    print("Shape of qdd:", np.shape(qdd_csv))
+
+    print("Type of q:", type(q_csv))
+    print("Type of qd:", type(qd_csv))
+    print("Type of qdd:", type(qdd_csv))
+
+    # def random_q(t):
+    #     return np.sin(t) + 0.5 * np.cos(0.5 * t)
+
+    # def random_qd(t):
+    #     return np.cos(t) - 0.25 * np.sin(0.5 * t)
+
+    # def random_qdd(t):
+    #     return -np.sin(t) - 0.125 * np.cos(0.5 * t)
+
+    g = 9.81
+    gravity = np.array([0, g, 0])
+
+    t_total_start = time.perf_counter()
 
 
-torques, torquesLE = rneagen(time_step, q_csv, qd_csv, qdd_csv, links, gravity)
+    def rneagen(time_step, q_csv, qd_csv, qdd_csv, links, gravity):
+        for t_idx in range(len(time_step)): #len(time)
+            q = q_csv[t_idx]   # Joint positions from CSV
+            qd = qd_csv[t_idx] # Joint velocities from CSV
+            qdd = qdd_csv[t_idx] # Joint accelerations from CSV
+            torque = rnea(q, qd, qdd, links, gravity)  # Compute torques using RNEA
+            torques.append(torque)
+            torque2 = tau_input(time_step[t_idx])
+            torquesLE.append(torque2)
+            
+        return torques, torquesLE
 
 
-t_total_end = time.perf_counter()
-elapsed = t_total_end - t_total_start
-print(f"Total runtime: {elapsed:.4f} s")
-print(f"Average per timestep: {elapsed/len(time_step):.6f} s")
+    torques, torquesLE = rneagen(time_step, q_csv, qd_csv, qdd_csv, links, gravity)
 
 
-
-torques = np.array(torques)
-torquesLE = np.array(torquesLE)
-
-# torques[np.abs(torques) < threshold] = 0.0
-# torquesLE[np.abs(torquesLE) < threshold] = 0.0
-
-    # Create a dictionary with the data
-cols = torques.shape[1] if (hasattr(torques, "ndim") and torques.ndim > 1) else 1
-data = {f't{i+1}': (torques[:, i] if cols > 1 else torques[:]) for i in range(cols)}
-
-df = pd.DataFrame(data)
-
-torque_data = f"{out_dir}/torquesNE{n}.csv"
-
-
-df.to_csv(torque_data, index=False)
+    t_total_end = time.perf_counter()
+    elapsed = t_total_end - t_total_start
+    print(f"Total runtime: {elapsed:.4f} s")
+    print(f"Average per timestep: {elapsed/len(time_step):.6f} s")
 
 
 
-# Plot the torques
+    torques = np.array(torques)
+    torquesLE = np.array(torquesLE)
 
-plot_graphs(n, torquesLE, torques)
+    # torques[np.abs(torques) < threshold] = 0.0
+    # torquesLE[np.abs(torquesLE) < threshold] = 0.0
 
+        # Create a dictionary with the data
+    cols = torques.shape[1] if (hasattr(torques, "ndim") and torques.ndim > 1) else 1
+    data = {f't{i+1}': (torques[:, i] if cols > 1 else torques[:]) for i in range(cols)}
 
-# Add options for the joints
-# verification simulation for double pendulum
-# The torque is external
-# To input torque as some sine function
+    df = pd.DataFrame(data)
 
-
-# 12.03.2025
-# consider single-link pendulum
-# external torque again
-# 
+    torque_data = f"{out_dir}/torquesNE{n}.csv"
 
 
-
-# 14.04.25
-# try making m2 = 0, or make m1 = 1000m2
+    df.to_csv(torque_data, index=False)
 
 
 
-# 5 link system with varying joint types, same mass, length, I
-# recursive lagrangian 
+    # Plot the torques
+
+    plot_graphs(n, torquesLE, torques)
 
 
-# 15.08.25
-# check the indices
-# send the code
+    # Add options for the joints
+    # verification simulation for double pendulum
+    # The torque is external
+    # To input torque as some sine function
+
+
+    # 12.03.2025
+    # consider single-link pendulum
+    # external torque again
+    # 
 
 
 
-# 12.12
-# Featherstone's general implementation
+    # 14.04.25
+    # try making m2 = 0, or make m1 = 1000m2
+
+
+
+    # 5 link system with varying joint types, same mass, length, I
+    # recursive lagrangian 
+
+
+    # 15.08.25
+    # check the indices
+    # send the code
+
+
+
+    # 12.12
+    # Featherstone's general implementation

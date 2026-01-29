@@ -5,13 +5,15 @@ import os
 print(os.getcwd())
 
 # Read the CSV files
-n = 3
+n = 2
 
 out_dir = './ra'
 
 csv_name_le= f"{out_dir}/torquesLE{n}.csv"
 csv_name_ne= f"{out_dir}/torquesNE{n}.csv"
-csv_name_fst= f"{out_dir}/torquesFst{n}.csv"
+# csv_name_fst= f"{out_dir}/torquesFst{n}.csv"
+csv_name_fst= f"{out_dir}/torquesFst{3}.csv"
+
 
 
 torques_le = pd.read_csv(csv_name_le)
