@@ -60,7 +60,7 @@ def skew(v):
     ])
 
 def crm(v):
-    w = v[:3]
+    w = v[:3] # check the dimensions
     vlin = v[3:]
     return np.block([
         [skew(w), np.zeros((3,3))],
@@ -81,6 +81,12 @@ def spatial_inertia(m, Ic, c):
         [m * C.T, m * np.eye(3)]
     ])
 
+
+
+# # np.block([
+#         [Ic + m * C @ C.T, m * C],
+#         [m * C.T, m * np.eye(3)]
+#     ])
 # -----------------------------
 # Joint transform (planar)
 # -----------------------------
@@ -126,6 +132,7 @@ def featherstone_id(q, qd, qdd, links, gravity):
 
         I[i] = spatial_inertia(m, Ic_com, c)
         Xup[i] = Xrotz(q[i], l)
+        # print('Featherstone I:', I[i])
 
         vJ = S * qd[i]
 
@@ -145,6 +152,10 @@ def featherstone_id(q, qd, qdd, links, gravity):
         if i > 0:
             f[i-1] += Xup[i].T @ f[i]
 
+    
+    # print("Featherstone V:", v)
+    # print("Featherstone a:", a)
+
     return tau
 
 # -----------------------------
@@ -154,14 +165,15 @@ def featherstone_id(q, qd, qdd, links, gravity):
 def link_data(n, l=1.0, m=1.0):
     links = []
     for _ in range(n):
-        if _ == 2:
-            l = 0.001
-            m = 0.001
+        # if _ == 2:
+        #     l = 0.001
+        #     m = 0.001
+        #     Ic = np.diag([0.0, (1/12)*m*l*l, (1/12)*m*l*l])
+        #     links.append((0,0,l,m,Ic,1,0.0))
+        # else:
             Ic = np.diag([0.0, (1/12)*m*l*l, (1/12)*m*l*l])
             links.append((0,0,l,m,Ic,1,0.0))
-        else:
-            Ic = np.diag([0.0, (1/12)*m*l*l, (1/12)*m*l*l])
-            links.append((0,0,l,m,Ic,1,0.0))
+
     return links
 
 
@@ -237,10 +249,11 @@ if __name__ == "__main__":
 
 
     def ftst(time_step, q_csv, qd_csv, qdd_csv, links, gravity):
-        for t_idx in range(3): #len(time_step)
+        for t_idx in range(len(time_step)): #len(time_step)
             q = q_csv[t_idx]   # Joint positions from CSV
             qd = qd_csv[t_idx] # Joint velocities from CSV
             qdd = qdd_csv[t_idx] # Joint accelerations from CSV
+            print(f'Performing FTST for timestep {t_idx}')
             torque = featherstone_id(q, qd, qdd, links, gravity)  # Compute torques using RNEA
             torques.append(torque)
             torque2 = tau_input(time_step[t_idx])

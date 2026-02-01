@@ -25,7 +25,7 @@ from featherstone import featherstone_id, link_data as fst_link_data
 
 if __name__ == "__main__":
 
-    n = 2 
+    n = 2
     m1 = 1.0
     l1 = 1.0
     g = 9.81
@@ -57,7 +57,7 @@ if __name__ == "__main__":
     torques_ftst = []
 
 
-    for t_idx in range(5): #len(time)
+    for t_idx in range(3): #len(time)
         q = q_csv[t_idx]   # Joint positions from CSV
         qd = qd_csv[t_idx] # Joint velocities from CSV
         qdd = qdd_csv[t_idx] # Joint accelerations from CSV
