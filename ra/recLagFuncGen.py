@@ -317,18 +317,20 @@ def recLag(q, qd, qdd, links, gravity):
     D = [] # D matrices
     h = []
     c = []
-
+    b_arr = []
     i = 0
     for i in range(n):
         h.append(h_func(i, links, q, qd))
         c.append(c_func(i, links, gravity, q))
         for k in range(n):
             D.append(d_func(i, k, links, q))
-    
+        
+        theta, alpha, r, m, I, j_type, b = links[i]
+        b_arr.append(b*qd[i])
     D = np.array(D).reshape((n, n))
     h = np.array(h).reshape((n, 1))
     c = np.array(c).reshape((n, 1))
-    tau = D @ np.array(qdd).reshape((n, 1)) +  h + c
+    tau = D @ np.array(qdd).reshape((n, 1)) +  h + c + np.array(b_arr).reshape((n, 1))
     return np.ravel(tau)
     # return tau
 
@@ -342,7 +344,7 @@ def link_data(n):
             [0, 0, 0, 0],
             [0, 0, 0, 0],
             [-0.5 * m1 * l1, 0, 0, m1],
-        ]), 1, 0.))
+        ]), 1, -10.))
     return links
 
 # 11.07.25
@@ -436,7 +438,7 @@ if __name__ == "__main__":
             [0, 0, 0, 0],
         ]), 1, 0.)]
     '''
-    time_step = np.linspace(0, 10, 1000)  # Time steps from 0 to 10 seconds
+    time_step = np.linspace(0, 100, 10000)  # Time steps from 0 to 10 seconds
     torques = []
 
     torquesLE = []

@@ -67,8 +67,8 @@ def graphs(q, qd, qdd, t):
 if __name__ == "__main__":
     # Time parameters
     t_start = 0
-    t_end = 10
-    n_points = 1000
+    t_end = 100
+    n_points = 10000
     n_links = 2  # Number of links
     t = np.linspace(t_start, t_end, n_points)
 

@@ -1,6 +1,4 @@
 import numpy as np
-
-import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import os
@@ -74,8 +72,13 @@ def crf(v):
 # Spatial inertia
 # -----------------------------
 
-def spatial_inertia(m, Ic, c):
+def spatial_inertia(m, Ic, c, i):
     C = skew(c)
+    # if i == 0:
+    #     return np.block([
+    #         [Ic , np.zeros((3, 3))],
+    #         [np.zeros((3, 3)), m * np.eye(3)]
+    #     ])
     return np.block([
         [Ic + m * C @ C.T, m * C],
         [m * C.T, m * np.eye(3)]
@@ -104,8 +107,38 @@ def Xrotz(theta, r):
     X = np.zeros((6,6))
     X[:3,:3] = R
     X[3:,3:] = R
+    print(r)
     X[3:,:3] = skew(np.array([r,0,0])) @ R
     return X
+
+
+def XJ_revolute_z(theta):
+    c = np.cos(theta)
+    s = np.sin(theta)
+    R = np.array([[c,-s,0],
+                  [s, c,0],
+                  [0, 0,1]])
+    X = np.zeros((6,6))
+    X[:3,:3] = R
+    X[3:,3:] = R
+    return X
+
+
+def Xtree_translation_x(l, theta):
+    X = np.eye(6)
+    X[3:,:3] = -skew(np.array([l,0,0])) #l*theta
+    return X
+
+
+def cj_func(theta, thetad, r):
+    c = np.cos(theta)
+    s = np.sin(theta)
+    return np.array([0, 0, 0, -r*s*thetad**2, -r*c*thetad**2, 0]) # dummy function
+
+def vj_func(theta, thetad, r):
+    c = np.cos(theta)
+    s = np.sin(theta)
+    return np.array([0, 0, thetad, r*c*thetad, -r*s*thetad, 0]) # dummy function
 
 # -----------------------------
 # Featherstone inverse dynamics
@@ -121,37 +154,49 @@ def featherstone_id(q, qd, qdd, links, gravity):
     f = [np.zeros(6) for _ in range(n)]
     Xup = [None]*n
     I = [None]*n
-
+    Xupf = [None]*n
     # Base acceleration (gravity)
     a0 = np.array([0,0,0, -gravity[0], -gravity[1], -gravity[2]])
 
     # Forward pass
     for i in range(n):
-        _, _, l, m, Ic_com, _, _ = links[i]
-        c = np.array([-l/2, 0, 0])
+        _, _, l, m, Ic_com, _, b = links[i]
+        # if i == 0:
+        #     l = 1
+        c = np.array([l/2, 0, 0])  
 
-        I[i] = spatial_inertia(m, Ic_com, c)
-        Xup[i] = Xrotz(q[i], l)
+        I[i] = spatial_inertia(m, Ic_com, c, i)
+
+        # Xup[i] = Xrotz(q[i], l)
+        Xup[i] = XJ_revolute_z(q[i]) @ Xtree_translation_x(l, q[i])
         # print('Featherstone I:', I[i])
-
+        # S = np.array([0,0,1,l * np.cos(q[i]),-l*np.sin(q[i]),0])  # revolute z-axis
         vJ = S * qd[i]
-
+        # vJ = vj_func(q[i], qd[i], l)
+        # cj = cj_func(q[i], qd[i], l)
         if i == 0:
             v[i] = vJ
-            a[i] = Xup[i] @ a0 + S * qdd[i] + crm(v[i]) @ vJ
+            a[i] = Xup[i] @ a0 + S * qdd[i]# + crm(v[i]) @ vJ
         else:
             v[i] = Xup[i] @ v[i-1] + vJ
             a[i] = Xup[i] @ a[i-1] + S * qdd[i] + crm(v[i]) @ vJ
 
-        f[i] = I[i] @ a[i] + crf(v[i]) @ (I[i] @ v[i])
+        f[i] = I[i] @ a[i] + crf(v[i]) @ I[i] @ v[i]
 
     # Backward pass
     tau = np.zeros(n)
     for i in reversed(range(n)):
-        tau[i] = S @ f[i]
+        tau[i] = S.T @ f[i] + b * qd[i]
+        # print(f"Joint {i} torque: {tau[i]}")
         if i > 0:
+            # X = np.eye(6)
+            # X[:3,3:] = -skew(np.array([l*q[i],0,0]))
+            # Xupf[i] = XJ_revolute_z(q[i]) @ X
+            # f[i-1] += Xupf[i] @ f[i]
+            # Xupf[i] = XJ_revolute_z(q[i]) @ Xtree_translation_x(l, q[i]).T
+            # f[i-1] += Xupf[i] @ f[i]
             f[i-1] += Xup[i].T @ f[i]
-
+# check the transpose
     
     # print("Featherstone V:", v)
     # print("Featherstone a:", a)
@@ -172,7 +217,7 @@ def link_data(n, l=1.0, m=1.0):
         #     links.append((0,0,l,m,Ic,1,0.0))
         # else:
             Ic = np.diag([0.0, (1/12)*m*l*l, (1/12)*m*l*l])
-            links.append((0,0,l,m,Ic,1,0.0))
+            links.append((0,0,l,m,Ic,1,-10.0))
 
     return links
 
@@ -212,7 +257,7 @@ if __name__ == "__main__":
     #     (0, 0, 1.0, 1.0, np.diag([1, 1, 1]), 1, 0.)      # Link 2
     # ]
 
-    time_step = np.linspace(0, 10, 1000)  # Time steps from 0 to 10 seconds
+    time_step = np.linspace(0, 100, 10000)  # Time steps from 0 to 10 seconds
     torques = []
 
     torquesLE = []
@@ -243,7 +288,9 @@ if __name__ == "__main__":
     #     return -np.sin(t) - 0.125 * np.cos(0.5 * t)
 
     g = 9.81
-    gravity = np.array([0, g, 0])
+    gravity = np.array([0, -g, 0])
+    # gravity = np.array([0, 0, 0])
+
 
     t_total_start = time.perf_counter()
 
@@ -296,7 +343,7 @@ if __name__ == "__main__":
 
     # Plot the torques
 
-    plot_graphs(n, torquesLE, torques)
+    # plot_graphs(n, torquesLE, torques)
 
 
 
@@ -310,3 +357,10 @@ if __name__ == "__main__":
 # check the notations for the link parameters in the Featherstone.
 
 # n = 3, m1=m2 = 1, m3 = 0.001, same for Ic. or just make Ic3 really small.
+
+
+# page 116-114
+# bodies connected in serial chains
+
+
+# ext torque sinusoidal and damping

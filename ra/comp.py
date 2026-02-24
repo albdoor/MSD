@@ -21,7 +21,7 @@ torques_ne = pd.read_csv(csv_name_ne)
 torques_fst = pd.read_csv(csv_name_fst)
 
 # Create time vector
-time = np.linspace(0, 10, len(torques_le))
+time = np.linspace(0, 100, len(torques_le))
 
 # Get number of joints from column count
 n_joints = len(torques_le.columns)
@@ -34,7 +34,7 @@ plt.rcParams.update({'xtick.labelsize': fs-2, 'ytick.labelsize': fs-2})
 
 
 # Create subplots for each joint
-plt.figure(figsize=(15, 1.5*n_joints))
+plt.figure(figsize=(15, 3.5*n_joints))
 
 
 # Plot each joint
