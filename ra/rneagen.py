@@ -1,3 +1,5 @@
+import glob
+
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -6,6 +8,20 @@ import time
 print(os.getcwd())  # Print the current working directory
 print(os.listdir()) # List all files in the current directory
 threshold = 1e-13
+addCount = 0
+multCount = 0
+trigCount = 0
+
+
+def reset_counters():
+    global addCount, multCount, trigCount
+    addCount = 0
+    multCount = 0
+    trigCount = 0
+
+def output_counters():
+    return addCount, multCount, trigCount
+
 
 def tau_input(t):
     return np.array([0.5 * np.sin(3 * t), 0.88 * np.cos(2 * t), 0, 0, 0, 0, 0, 0, 0, 0, 0]) # , 0.075 * np.cos(2 * t) 0.88 * np.cos(2 * t), 0.88 * np.cos(2 * t)
@@ -41,6 +57,7 @@ def load_joint_data(npy_filename, n, time_int, filetype):
     return q, qd, qdd
 
 def rotation_matrix_to_base(q, links, link_idx):
+    global trigCount, multCount, addCount
     cumul_angle = 0
     res = np.array([
         [1, 0, 0],
@@ -58,6 +75,7 @@ def rotation_matrix_to_base(q, links, link_idx):
             [np.sin(q[link_idx]), np.cos(q[link_idx]), 0],
             [0, 0, 1]
         ])
+        trigCount += 1
         res[np.abs(res) < threshold] = 0.0
         return res
     if (link_idx >= 1):
@@ -71,6 +89,8 @@ def rotation_matrix_to_base(q, links, link_idx):
                     [np.sin(q[link_idx]), np.cos(q[link_idx]), 0],
                     [0, 0, 1]
                 ])
+                trigCount += 1
+                multCount += 1
                 res = res @ temp
         # res[np.abs(res) < threshold] = 0.0
         return res
@@ -79,6 +99,7 @@ def rotation_matrix_to_base(q, links, link_idx):
 
 
 def rotation_matrix(i, j, q, links):
+    global trigCount, multCount, addCount
     iden_matrix = np.array([
         [1, 0, 0],
         [0, 1, 0],
@@ -103,6 +124,7 @@ def rotation_matrix(i, j, q, links):
             [0, 0, 1]
         ])
         # res[np.abs(res) < threshold] = 0.0
+        trigCount += 1
         return res 
     elif (abs(j)-abs(i)) == -1:#check
             theta, alpha, r, m, I, j_type, b = links[j]
@@ -112,6 +134,7 @@ def rotation_matrix(i, j, q, links):
             [0, 0, 1]
             ]).T
             # res[np.abs(res) < threshold] = 0.0
+            trigCount += 1
             return res  
     elif (j-i > 1): #check
         res = np.eye(4)
@@ -125,6 +148,8 @@ def rotation_matrix(i, j, q, links):
             [0, 0, 1]
             ])
             res = res @ temp
+            trigCount += 1
+            multCount += 1
             # print('----------------------------- Coordinate Transform -----------------------------------------------')
             # print(k)
             # print(res)    
@@ -136,14 +161,17 @@ def s_vector(q, l):
        return np.array([[-l/2], [0], [0]]) 
 
 def p_star_vector(q, l, i, j):
+    global multCount
     if (i == j):
         return np.array([[l], [0], [0]])
     if (i - j == 1):
         res = (rotation_matrix(i-1, i, q, links).T) @ p_star_vector(q, l, j, j)
+        multCount += 1
         return res 
 
 
 def rnea(q, qd, qdd, links, gravity):
+    global addCount, multCount, trigCount
     n = len(links)  # Number of links
     omega = np.zeros((n, 3))  # Angular velocity
     omegad = np.zeros((n, 3))  # Angular acceleration
@@ -166,11 +194,14 @@ def rnea(q, qd, qdd, links, gravity):
                 omega[i] =  (R[i].T @ np.array([[0], [0], [qd[i]]])).reshape((3, ))
                 omegad[i] = (R[i].T @ np.array([[0], [0], [qdd[i]]])).reshape((3, ))
                 vd[i] = (np.cross(omegad[i], (p_star[i]).T) + np.cross(omega[i], np.cross(omega[i], p_star[i].T)) + R[i].T @ gravity).reshape((3, ))
-
+                multCount += 3
+                addCount += 2
             else:   
                 omega[i] = np.zeros(3)
                 omegad[i] = np.zeros(3)
                 vd[i] = gravity + R[i] @ np.array([[qdd[i]], [0], [0]])  # Motion along joint axis
+                multCount += 1
+                addCount += 1
                     
             # print(vd[i])
         else:
@@ -178,12 +209,17 @@ def rnea(q, qd, qdd, links, gravity):
                 omega[i] = (R[i].T @ (omega[i - 1] + np.array([0, 0, qd[i]]))).reshape((3, )) #check
                 omegad[i] = (R[i].T @ (omegad[i - 1] + np.cross(omega[i-1], np.array([0, 0, qd[i]])) + np.array([0, 0, qdd[i]])).reshape((3, ))) #check
                 vd[i] = (R[i].T @ vd[i - 1] + np.cross(omegad[i], (p_star[i]).T) + np.cross(omega[i], np.cross(omega[i], (p_star[i]).T))).reshape((3, )) #check
-
+                multCount += 6
+                addCount += 5
             else:
                 omega[i] = R[i - 1] @ omega[i - 1]  # No angular motion
                 omegad[i] = R[i - 1] @ omegad[i - 1]
                 vd[i] = R[i - 1] @ vd[i - 1] + R[i] @ np.array([[qdd[i]], [0], [0]])
+                multCount += 3
+                addCount += 1
         a_c[i] = np.cross(omegad[i],  (s_bar[i]).T) + np.cross(omega[i],  np.cross(omega[i],  (s_bar[i]).T)) + vd[i]
+        multCount += 2
+        addCount += 2
     # Backward recursion: force & torque propagation
     F = np.zeros((n, 3))  # Force
     N = np.zeros((n, 3))  # Torque
@@ -198,15 +234,21 @@ def rnea(q, qd, qdd, links, gravity):
             N[i] = np.dot(Rbase[i].T @ I @ Rbase[i], omegad[i]) + np.cross(omega[i], np.dot(Rbase[i].T @ I @ Rbase[i], omega[i]))
             f[i] = F[i]
             n_torque[i] = np.cross((p_star[i]).T + (s_bar[i]).T, F[i]) + N[i]
+            multCount += 8
+            addCount += 3
 
         else: 
             F[i] = m * a_c[i]
             N[i] = np.dot(Rbase[i].T @ I @ Rbase[i], omegad[i]) + np.cross(omega[i], np.dot(Rbase[i].T @ I @ Rbase[i], omega[i]))
             f[i] = R[i+1] @ f[i+1] + F[i]
             n_torque[i] = (R[i+1] @ (n_torque[i+1] + np.cross((np.array([[r*np.cos(q[i+1])], [-r*np.sin(q[i+1])], [0]])).T, f[i+1])).T + (np.cross((p_star[i]).T + (s_bar[i]).T, F[i]) + N[i]).T).reshape(3, )
-
+            multCount += 10
+            trigCount += 1
+            addCount += 6
         if j_type == 1:
             tau[i] = np.dot(n_torque[i].reshape(3,), R[i].T @ np.array([0, 0, 1]).T) + b * qd[i]
+            multCount += 3
+            addCount += 1
         else:  # Prismatic
             tau[i] = np.dot(f[i], R[i].T @ np.array([0, 0, 1])) + b * qd[i]    
     
@@ -220,7 +262,7 @@ def link_data(n):
         # if i == 2:
         #     links.append((0, 0, 1, 0.001, np.diag([0, 1/12 * 1, 1/12 * 1]), 1, 0.))
         # else:
-            links.append((0, 0, 1.0, 1.0, np.diag([0, 1/12 * 1, 1/12 * 1]), 1, -10.0))
+            links.append((0, 0, 1.0, 1.0, np.diag([0, 1/12 * 1, 1/12 * 1]), 1, 50.0))
     return links
 
 
@@ -241,7 +283,7 @@ if __name__ == "__main__":
 
     # Define the manipulator links: (theta, alpha, length, mass, inertia tensor, joint type: 0 - translational, 1 - rotational, damping coeff.)
     # n = 2
-    n = 2
+    n = 4
 
     # links = [
     #     (0, 0, 1.0, 1.0, np.diag([0.0, 1/12 * 1, 1/12 * 1]), 1, 0.),  # Link 1
@@ -256,7 +298,7 @@ if __name__ == "__main__":
     #     (0, 0, 1.0, 1.0, np.diag([1, 1, 1]), 1, 0.)      # Link 2
     # ]
 
-    time_step = np.linspace(0, 100, 10000)  # Time steps from 0 to 10 seconds
+    time_step = np.linspace(0, 5, 10000)  # Time steps from 0 to 5 seconds
     torques = []
 
     torquesLE = []
@@ -327,7 +369,9 @@ if __name__ == "__main__":
 
     df = pd.DataFrame(data)
 
-    torque_data = f"{out_dir}/torquesNE{n}.csv"
+    # torque_data = f"{out_dir}/torquesNE{n}.csv"
+    torque_data = f"{out_dir}/data5s/torquesNE{n}.csv"
+
 
 
     df.to_csv(torque_data, index=False)

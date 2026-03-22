@@ -1,3 +1,5 @@
+import glob
+
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -6,15 +8,32 @@ import time
 
 print(os.getcwd())  # Print the current working directory
 print(os.listdir()) # List all files in the current directory
+
+
 threshold = 1e-13
+addCount = 0
+multCount = 0
+trigCount = 0
+
+
+def reset_counters():
+    global addCount, multCount, trigCount
+    addCount = 0
+    multCount = 0
+    trigCount = 0
+
+def output_counters():
+    return addCount, multCount, trigCount
 
 def Uij(i, j, q, links):  # provides the integration matrix    TO BE CHECKED
+    global addCount, multCount
     if (j > i):
         return 0
     else:
         theta, alpha, r, m, I, j_type, b = links[i]
         if (i == j) and (j == 0):
             u_deriv =  Q_mat() @ coord_transform_new(j-1, i, q, links)
+            multCount += 1
             # print("-------------------- Passing through Uij ----------------------")
             # print(coord_transform_new(j-1, i, q, links))
             # print(q[i])
@@ -32,6 +51,7 @@ def Uij(i, j, q, links):  # provides the integration matrix    TO BE CHECKED
 
 
 def Uijk(i, j, k, q, links):  # provides the double integration matrix   TO BE CHECKED
+    global addCount, multCount
     if ((i < j) or (i < k)):
         return 0
     elif ((i >= k) and (k >= j)):
@@ -44,18 +64,20 @@ def Uijk(i, j, k, q, links):  # provides the double integration matrix   TO BE C
         # print(np.shape(coord_transform_new(k-1, i, q, links)))
         # print(f' ----------------------------- U {i} {j} {k} --------------------------')
         uijk_deriv = coord_transform_to_base(q, links, j-1) @ Q_mat() @ coord_transform_new(j-1, k-1, q, links) @ Q_mat() @ coord_transform_new(k-1, i, q, links)
+        multCount += 4
         # print(uijk_deriv)
         return uijk_deriv
     elif ((i >= j) and (j >= k)):
         theta, alpha, r, m, I, j_type, b = links[i]     
         uijk_deriv = coord_transform_to_base(q, links, k-1) @ Q_mat() @ coord_transform_new(k-1, j-1, q, links) @ Q_mat() @ coord_transform_new(j-1, i, q, links)
+        multCount += 4
         return uijk_deriv
 
 
 def d_func(i, k, links, q):
     sum = 0
     j = max(i, k)
- 
+    global addCount, multCount
     for j in range(j, len(links)):
         theta, alpha, r, m, I, j_type, b = links[j]
 
@@ -68,11 +90,14 @@ def d_func(i, k, links, q):
         # print(ujk)
         # print(ujk)
         # print(uji)
-        sum += np.trace(ujk @ inertia_tensor @ uji.T) 
+        sum += np.trace(ujk @ inertia_tensor @ uji.T)
+        multCount += 2
+        addCount += 1 
     return sum
 
 def hikm_func(i, k, m, links, q):
     sum = 0
+    global addCount, multCount
     j = max(i, k, m)
     for j in range(j, len(links)):
         theta, alpha, r, mass, I, j_type, b = links[j]
@@ -80,26 +105,32 @@ def hikm_func(i, k, m, links, q):
         ujkm = Uijk(j, k, m, q, links)
         uji = Uij(j, i, q, links)
         sum += np.trace(ujkm @ inertia_tensor @ uji.T)
+        multCount += 2
+        addCount += 1 
     return sum
 
 def h_func(i, links, q, qd):
     m = 0
     k = 0
     res = 0
+    global addCount, multCount
     for k in range(len(links)):
         for m in range(len(links)):
            res += hikm_func(i, k, m, links, q) * qd[k] * qd[m] 
-    
+           multCount += 2
     return res
 
 def c_func(i, links, g, q):
     j = i
     res = 0
+    global addCount, multCount
     for j in range(i, len(links)):
         theta, alpha, r, m, I, j_type, b = links[j]
         uji = Uij(j, i, q, links)
         rmid = np.array([[-r/2], [0], [0], [1]])
         res += (-m * g @ uji @ rmid)
+        multCount += 2
+        addCount += 1
     return res    
 
 
@@ -138,7 +169,7 @@ def load_joint_data(npy_filename, n, time_int, filetype):
         q[:, i] = data[i]
 
     for i in range(n, 2 * n):
-        print(i)
+        # print(i)
         qd[:, i - n] = data[i]
 
     for i in range(2 * n, 3 * n):
@@ -148,6 +179,7 @@ def load_joint_data(npy_filename, n, time_int, filetype):
 
 
 def coord_transform_new(i, j, q, links):
+    global addCount, multCount, trigCount
     '''
     if (abs(j - i) > 1):
         id_matr = np.array([
@@ -187,6 +219,7 @@ def coord_transform_new(i, j, q, links):
             [0, 0, 0, 1]
         ])
         res[np.abs(res) < threshold] = 0.0
+        trigCount += 1
         return res 
     elif (abs(j)-abs(i)) == -1:#check
             theta, alpha, r, m, I, j_type, b = links[j]
@@ -197,6 +230,7 @@ def coord_transform_new(i, j, q, links):
             [0, 0, 0, 1]
             ]).T
             res[np.abs(res) < threshold] = 0.0
+            trigCount += 1
             return res  
     elif (j-i > 1): #check
         res = np.eye(4)
@@ -211,6 +245,8 @@ def coord_transform_new(i, j, q, links):
                 [0, 0, 0, 1]
             ])
             res = res @ temp
+            multCount += 1
+            trigCount += 1
             # print('----------------------------- Coordinate Transform -----------------------------------------------')
             # print(k)
             # print(res)
@@ -234,6 +270,7 @@ def coord_transform(theta, l):
     ])
 
 def coord_transform_to_base(q, links, link_idx):
+    global addCount, multCount, trigCount
     cumul_angle = 0
     res = np.array([
         [1, 0, 0, 0],
@@ -253,6 +290,7 @@ def coord_transform_to_base(q, links, link_idx):
             [0, 0, 1, 0],
             [0, 0, 0, 1]
         ])
+        trigCount += 3
         res[np.abs(res) < threshold] = 0.0
         return res
     if (link_idx >= 1):
@@ -267,6 +305,9 @@ def coord_transform_to_base(q, links, link_idx):
                 [0, 0, 1, 0],
                 [0, 0, 0, 1]
             ])
+                trigCount += 3
+                multCount += 1
+
                 res = res @ temp
         res[np.abs(res) < threshold] = 0.0
         return res
@@ -312,6 +353,7 @@ def plot_graphs(n, data1, data2):
 
 
 def recLag(q, qd, qdd, links, gravity):
+    global addCount, multCount
     n = len(links)  # number of links
     tau = np.zeros(n)  # joint torques
     D = [] # D matrices
@@ -331,6 +373,8 @@ def recLag(q, qd, qdd, links, gravity):
     h = np.array(h).reshape((n, 1))
     c = np.array(c).reshape((n, 1))
     tau = D @ np.array(qdd).reshape((n, 1)) +  h + c + np.array(b_arr).reshape((n, 1))
+    multCount += 1
+    addCount += 3
     return np.ravel(tau)
     # return tau
 
@@ -344,7 +388,7 @@ def link_data(n):
             [0, 0, 0, 0],
             [0, 0, 0, 0],
             [-0.5 * m1 * l1, 0, 0, m1],
-        ]), 1, -10.))
+        ]), 1, 50.))
     return links
 
 # 11.07.25
@@ -361,7 +405,7 @@ if __name__ == "__main__":
     l1 = 1
     l2 = 1
 
-    n = 2
+    n = 3
 
     # Define the manipulator links: (theta, alpha, length, mass, inertia tensor, joint type: 0 - translational, 1 - rotational, damping coeff.)
     '''
@@ -438,7 +482,7 @@ if __name__ == "__main__":
             [0, 0, 0, 0],
         ]), 1, 0.)]
     '''
-    time_step = np.linspace(0, 100, 10000)  # Time steps from 0 to 10 seconds
+    time_step = np.linspace(0, 5, 10000)  # Time steps from 0 to 5 seconds
     torques = []
 
     torquesLE = []
@@ -518,7 +562,10 @@ if __name__ == "__main__":
 
     df = pd.DataFrame(data)
 
-    torque_data = f"{out_dir}/torquesLE{n}.csv"
+    # torque_data = f"{out_dir}/torquesLE{n}.csv"
+    torque_data = f"{out_dir}/data5s/torquesLE{n}.csv"
+
+
 
     df.to_csv(torque_data, index=False)
     # ...existing code...

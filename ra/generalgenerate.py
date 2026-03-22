@@ -67,8 +67,8 @@ def graphs(q, qd, qdd, t):
 if __name__ == "__main__":
     # Time parameters
     t_start = 0
-    t_end = 100
-    n_points = 10000
+    t_end = 10
+    n_points = t_end * 100  # 100 points per second
     n_links = 2  # Number of links
     t = np.linspace(t_start, t_end, n_points)
 
@@ -91,7 +91,7 @@ if __name__ == "__main__":
 
     # Create a pandas DataFrame and save to CSV
     df = pd.DataFrame(data)
-    df.to_csv(f"./ra/trajectory_data_gen{n_links}.csv", index=False)
+    # df.to_csv(f"./ra/trajectory_data_gen{n_links}.csv", index=False)
 
     # Plot the results
     graphs(q, qd, qdd, t)

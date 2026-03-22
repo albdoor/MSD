@@ -6,21 +6,21 @@ from recLagFuncGen import recLag, load_joint_data, link_data as rlg_link_data, p
 from rneagen import rnea, link_data as rnea_link_data
 from featherstone import featherstone_id, link_data as fst_link_data
 
-# def plot_graphs_torque(n, torques_le, torques_ne, torques_fst, time):
-#     lw = 2.5           # line width
-#     fs = 16
-#     for i in range(n):
-#         plt.subplot(n, 1, i+1)
-#         plt.plot(time, torques_le[f't{i+1}'], 'b-', label='Lagrange', linewidth=lw)
-#         plt.plot(time, torques_ne[f't{i+1}'], 'r--', label='Newton-Euler', linewidth=lw)
-#         plt.plot(time, torques_fst[f't{i+1}'], 'g-.', label='Featherstone', linewidth=lw)
-#         plt.title(f'Joint {i+1} Torque Comparison', fontsize=fs)
-#         plt.xlabel('Time (s)', fontsize=fs-1)
-#         plt.ylabel('Torque (Nm)', fontsize=fs-1)
-#         plt.legend(fontsize=fs-5)
-#         plt.grid(True)
+def plot_graphs_torque(n, torques_le, torques_ne, torques_fst, time):
+    lw = 2.5           # line width
+    fs = 16
+    for i in range(n):
+        plt.subplot(n, 1, i+1)
+        plt.plot(time, torques_le[:, i], 'b-', label='Lagrange', linewidth=lw)
+        plt.plot(time, torques_ne[:, i], 'r--', label='Newton-Euler', linewidth=lw)
+        plt.plot(time, torques_fst[:, i], 'g-.', label='Featherstone', linewidth=lw)
+        plt.title(f'Joint {i+1} Torque Comparison', fontsize=fs)
+        plt.xlabel('Time (s)', fontsize=fs-1)
+        plt.ylabel('Torque (Nm)', fontsize=fs-1)
+        plt.legend(fontsize=fs-5)
+        plt.grid(True)
 
-#     plt.tight_layout()
+    plt.tight_layout()
 
 
 if __name__ == "__main__":
@@ -30,7 +30,7 @@ if __name__ == "__main__":
     l1 = 1.0
     g = 9.81
 
-    time_step = np.linspace(0, 10, 1000)  # Time steps from 0 to 10 seconds
+    time_step = np.linspace(0, 5, 10000)  # Time steps from 0 to 10 seconds
 
     torques = []
 
@@ -49,7 +49,7 @@ if __name__ == "__main__":
     links_rlg = rlg_link_data(n)
 
 
-    g_ftst = np.array([0, g, 0])
+    g_ftst = np.array([0, -g, 0])
     g_rlg = np.array([[0, -g, 0, 0]])
     g_rnea = np.array([0, g, 0])
     torques_rlg = []
@@ -57,15 +57,15 @@ if __name__ == "__main__":
     torques_ftst = []
 
 
-    for t_idx in range(3): #len(time)
+    for t_idx in range(len(time_step)): #len(time)
         q = q_csv[t_idx]   # Joint positions from CSV
         qd = qd_csv[t_idx] # Joint velocities from CSV
         qdd = qdd_csv[t_idx] # Joint accelerations from CSV
-        print('Performing FTST')
+        # print('Performing FTST')
         torques_ftst.append(featherstone_id(q, qd, qdd, links_fst, g_ftst))  # Compute torques using FTST
-        print('Performing RNEA')
+        # print('Performing RNEA')
         torques_rnea.append(rnea(q, qd, qdd, links_rnea, g_rnea))  # Compute torques using RNEA
-        print('Performing RLG')
+        # print('Performing RLG')
         torques_rlg.append(recLag(q, qd, qdd, links_rlg, g_rlg))  # Compute torques using RLG
 
     torques_ftst = np.array(torques_ftst)
@@ -80,6 +80,6 @@ if __name__ == "__main__":
     print(torques_rlg)
 
 
-
+    plot_graphs_torque(n, torques_rlg, torques_rnea, torques_ftst, time_step)
 
 

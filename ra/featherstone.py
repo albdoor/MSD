@@ -7,6 +7,19 @@ print(os.getcwd())  # Print the current working directory
 print(os.listdir()) # List all files in the current directory
 threshold = 1e-13
 
+addCount = 0
+multCount = 0
+trigCount = 0
+
+
+def reset_counters():
+    global addCount, multCount, trigCount
+    addCount = 0
+    multCount = 0
+    trigCount = 0
+
+def output_counters():
+    return addCount, multCount, trigCount
 
 # =========================
 # Spatial Algebra Utilities
@@ -73,12 +86,15 @@ def crf(v):
 # -----------------------------
 
 def spatial_inertia(m, Ic, c, i):
+    global addCount, multCount, trigCount
     C = skew(c)
     # if i == 0:
     #     return np.block([
     #         [Ic , np.zeros((3, 3))],
     #         [np.zeros((3, 3)), m * np.eye(3)]
     #     ])
+    addCount += 1
+    multCount += 4
     return np.block([
         [Ic + m * C @ C.T, m * C],
         [m * C.T, m * np.eye(3)]
@@ -95,6 +111,7 @@ def spatial_inertia(m, Ic, c, i):
 # -----------------------------
 
 def Xrotz(theta, r):
+    global addCount, multCount, trigCount
     c = np.cos(theta)
     s = np.sin(theta)
 
@@ -109,10 +126,13 @@ def Xrotz(theta, r):
     X[3:,3:] = R
     print(r)
     X[3:,:3] = skew(np.array([r,0,0])) @ R
+    multCount += 1
+    trigCount += 1
     return X
 
 
 def XJ_revolute_z(theta):
+    global addCount, multCount, trigCount
     c = np.cos(theta)
     s = np.sin(theta)
     R = np.array([[c,-s,0],
@@ -121,6 +141,7 @@ def XJ_revolute_z(theta):
     X = np.zeros((6,6))
     X[:3,:3] = R
     X[3:,3:] = R
+    trigCount += 1
     return X
 
 
@@ -133,6 +154,7 @@ def Xtree_translation_x(l, theta):
 def cj_func(theta, thetad, r):
     c = np.cos(theta)
     s = np.sin(theta)
+
     return np.array([0, 0, 0, -r*s*thetad**2, -r*c*thetad**2, 0]) # dummy function
 
 def vj_func(theta, thetad, r):
@@ -146,6 +168,7 @@ def vj_func(theta, thetad, r):
 
 def featherstone_id(q, qd, qdd, links, gravity):
     n = len(links)
+    global addCount, multCount, trigCount
 
     S = np.array([0,0,1,0,0,0])  # revolute z-axis
 
@@ -169,6 +192,7 @@ def featherstone_id(q, qd, qdd, links, gravity):
 
         # Xup[i] = Xrotz(q[i], l)
         Xup[i] = XJ_revolute_z(q[i]) @ Xtree_translation_x(l, q[i])
+        multCount += 1
         # print('Featherstone I:', I[i])
         # S = np.array([0,0,1,l * np.cos(q[i]),-l*np.sin(q[i]),0])  # revolute z-axis
         vJ = S * qd[i]
@@ -177,16 +201,24 @@ def featherstone_id(q, qd, qdd, links, gravity):
         if i == 0:
             v[i] = vJ
             a[i] = Xup[i] @ a0 + S * qdd[i]# + crm(v[i]) @ vJ
+            addCount += 1
+            multCount += 2
         else:
             v[i] = Xup[i] @ v[i-1] + vJ
             a[i] = Xup[i] @ a[i-1] + S * qdd[i] + crm(v[i]) @ vJ
+            addCount += 3
+            multCount += 3
 
         f[i] = I[i] @ a[i] + crf(v[i]) @ I[i] @ v[i]
+        multCount += 3
+        addCount += 1
 
     # Backward pass
     tau = np.zeros(n)
     for i in reversed(range(n)):
         tau[i] = S.T @ f[i] + b * qd[i]
+        multCount += 1
+        addCount += 1
         # print(f"Joint {i} torque: {tau[i]}")
         if i > 0:
             # X = np.eye(6)
@@ -196,6 +228,8 @@ def featherstone_id(q, qd, qdd, links, gravity):
             # Xupf[i] = XJ_revolute_z(q[i]) @ Xtree_translation_x(l, q[i]).T
             # f[i-1] += Xupf[i] @ f[i]
             f[i-1] += Xup[i].T @ f[i]
+            multCount += 1
+            addCount += 1
 # check the transpose
     
     # print("Featherstone V:", v)
@@ -217,7 +251,7 @@ def link_data(n, l=1.0, m=1.0):
         #     links.append((0,0,l,m,Ic,1,0.0))
         # else:
             Ic = np.diag([0.0, (1/12)*m*l*l, (1/12)*m*l*l])
-            links.append((0,0,l,m,Ic,1,-10.0))
+            links.append((0,0,l,m,Ic,1,50.0))
 
     return links
 
@@ -242,7 +276,7 @@ if __name__ == "__main__":
 
     # Define the manipulator links: (theta, alpha, length, mass, inertia tensor, joint type: 0 - translational, 1 - rotational, damping coeff.)
     # n = 2
-    n = 2
+    n = 5
 
     # links = [
     #     (0, 0, 1.0, 1.0, np.diag([0.0, 1/12 * 1, 1/12 * 1]), 1, 0.),  # Link 1
@@ -257,7 +291,7 @@ if __name__ == "__main__":
     #     (0, 0, 1.0, 1.0, np.diag([1, 1, 1]), 1, 0.)      # Link 2
     # ]
 
-    time_step = np.linspace(0, 100, 10000)  # Time steps from 0 to 10 seconds
+    time_step = np.linspace(0, 5, 10000)  # Time steps from 0 to 5 seconds
     torques = []
 
     torquesLE = []
@@ -300,7 +334,7 @@ if __name__ == "__main__":
             q = q_csv[t_idx]   # Joint positions from CSV
             qd = qd_csv[t_idx] # Joint velocities from CSV
             qdd = qdd_csv[t_idx] # Joint accelerations from CSV
-            print(f'Performing FTST for timestep {t_idx}')
+            # print(f'Performing FTST for timestep {t_idx}')
             torque = featherstone_id(q, qd, qdd, links, gravity)  # Compute torques using RNEA
             torques.append(torque)
             torque2 = tau_input(time_step[t_idx])
@@ -311,7 +345,7 @@ if __name__ == "__main__":
 
     torques, torquesLE = ftst(time_step, q_csv, qd_csv, qdd_csv, links, gravity)
 
-    print(torques)
+    # print(torques)
 
     t_total_end = time.perf_counter()
     elapsed = t_total_end - t_total_start
@@ -334,7 +368,9 @@ if __name__ == "__main__":
 
     df = pd.DataFrame(data)
 
-    torque_data = f"{out_dir}/torquesFst{n}.csv"
+    torque_data = f"{out_dir}/data5s/torquesFst{n}.csv"
+    # torque_data = f"{out_dir}/torquesFst{n}.csv"
+
 
 
     df.to_csv(torque_data, index=False)
@@ -364,3 +400,8 @@ if __name__ == "__main__":
 
 
 # ext torque sinusoidal and damping
+
+
+
+# damping coefficient at 50, simulations n from 2 to 20, simulation time to 5 sec to 100 sec only, 20 points last link trajectories, execution time. 
+# T - actual time , t - sim time (exec time), memory usage,  T vs t vs N, traj for 100 s N changing,  
