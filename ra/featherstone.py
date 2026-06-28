@@ -276,7 +276,7 @@ if __name__ == "__main__":
 
     # Define the manipulator links: (theta, alpha, length, mass, inertia tensor, joint type: 0 - translational, 1 - rotational, damping coeff.)
     # n = 2
-    n = 5
+    n = 4
 
     # links = [
     #     (0, 0, 1.0, 1.0, np.diag([0.0, 1/12 * 1, 1/12 * 1]), 1, 0.),  # Link 1

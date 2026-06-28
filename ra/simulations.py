@@ -30,8 +30,8 @@ from featherstone import featherstone_id, link_data as fst_link_data
 
 
 if __name__ == "__main__":
-    out_dir = './ra/data80s'
-    times_csv = f"{out_dir}/execution_times80sLE.csv"
+    out_dir = './ra/data5s'
+    times_csv = f"{out_dir}/execution_times5sLE.csv"
 
     if os.path.exists(times_csv):
         existing_df = pd.read_csv(times_csv)
@@ -39,11 +39,11 @@ if __name__ == "__main__":
     else:
         execution_times = []
 
-    for n in range(11, 21):
+    for n in range(2, 18):
         m1 = 1.0
         l1 = 1.0
         g = 9.81
-        t_end = 80
+        t_end = 5
         time_step = np.linspace(0, t_end, t_end * 100)  # Time steps from 0 to 40 seconds
 
         torques = []
@@ -160,7 +160,7 @@ if __name__ == "__main__":
             'le_time': time_elapsed[0]
         })            
         df_times = pd.DataFrame(execution_times)
-        times_csv = f"{out_dir}/execution_times80sLE.csv"
+        times_csv = f"{out_dir}/execution_times50sLE.csv"
         df_times.to_csv(times_csv, index=False)
         print(f'\nExecution times saved to {times_csv}')
 
@@ -171,3 +171,7 @@ if __name__ == "__main__":
 
 
 # number of additions, multiplications, trigonometric function calls
+
+
+# rec forw: Anderson's, Bobrow, 
+# explain why rec dynamics

@@ -10,6 +10,7 @@ from datetime import datetime
 from recLagFuncGen import recLag, load_joint_data, link_data as rlg_link_data, plot_graphs
 from rneagen import rnea, link_data as rnea_link_data
 from featherstone import featherstone_id, link_data as fst_link_data
+from hamiltonian import hamiltonian_id, link_data as ham_link_data
 
 # def plot_graphs_torque(n, torques_le, torques_ne, torques_fst, time):
 #     lw = 2.5           # line width
@@ -31,7 +32,7 @@ from featherstone import featherstone_id, link_data as fst_link_data
 if __name__ == "__main__":
     execution_times = []  # Store execution times and link count
     
-    for n in range(2, 21):
+    for n in range(2, 4):
         m1 = 1.0
         l1 = 1.0
         g = 9.81
@@ -42,8 +43,10 @@ if __name__ == "__main__":
 
         torquesLE = []
 
+        torquesHam = []
 
-        out_dir = './data5s'
+
+        out_dir = './ra/data5s'
 
         trj_data = f"{out_dir}/trajectory_data_gen{n}.csv"
 
@@ -53,14 +56,17 @@ if __name__ == "__main__":
         links_rnea = rnea_link_data(n)
         links_fst = fst_link_data(n)
         links_rlg = rlg_link_data(n)
+        links_ham = ham_link_data(n)
 
 
         g_ftst = np.array([0, -g, 0])
         g_rlg = np.array([[0, -g, 0, 0]])
         g_rnea = np.array([0, g, 0])
+        g_ham = np.array([0, -g, 0])
         torques_rlg = []
         torques_rnea = []
         torques_ftst = []
+        torques_ham = []
         time_elapsed = []
         
         print('Performing FTST')
@@ -148,15 +154,45 @@ if __name__ == "__main__":
 
 
 
+        print('Performing Hamiltonian')
+        t_total_start = time.perf_counter()
+
+        for t_idx in range(len(time_step)): #len(time)
+            q = q_csv[t_idx]   # Joint positions from CSV
+            qd = qd_csv[t_idx] # Joint velocities from CSV
+            qdd = qdd_csv[t_idx] # Joint accelerations from CSV
+            torques_ham.append(hamiltonian_id(q, qd, qdd, links_ham, g_ham))  # Compute torques using Hamiltonian
+
+
+        t_total_end = time.perf_counter()
+        elapsed = t_total_end - t_total_start
+        time_elapsed.append(elapsed)
+        
+        
+        torques_ham = np.array(torques_ham)
+
+        cols = torques_ham.shape[1] if (hasattr(torques_ham, "ndim") and torques_ham.ndim > 1) else 1
+        data = {f't{i+1}': (torques_ham[:, i] if cols > 1 else torques_ham[:]) for i in range(cols)}
+
+        df = pd.DataFrame(data)
+
+        torque_data = f"{out_dir}/torquesHam{n}.csv"
+        # torque_data = f"{out_dir}/torquesFst{n}.csv"
+
+        df.to_csv(torque_data, index=False)
+
+
+
         print(f'Completed computations for n={n} joints.')
         print(f'Time taken for FTST: {time_elapsed[0]:.4f} seconds')
         print(f'Time taken for RNEA: {time_elapsed[1]:.4f} seconds')
-        
+        print(f'Time taken for Hamiltonian: {time_elapsed[2]:.4f} seconds')
         # Store execution time data
         execution_times.append({
             'num_links': n,
             'ftst_time': time_elapsed[0],
-            'ne_time': time_elapsed[1]
+            'ne_time': time_elapsed[1],
+            'ham_time': time_elapsed[2]
         })
         # print(f'Time taken for RLG: {time_elapsed[0]:.4f} seconds')
     

@@ -283,7 +283,7 @@ if __name__ == "__main__":
 
     # Define the manipulator links: (theta, alpha, length, mass, inertia tensor, joint type: 0 - translational, 1 - rotational, damping coeff.)
     # n = 2
-    n = 4
+    n = 2
 
     # links = [
     #     (0, 0, 1.0, 1.0, np.diag([0.0, 1/12 * 1, 1/12 * 1]), 1, 0.),  # Link 1
@@ -298,13 +298,13 @@ if __name__ == "__main__":
     #     (0, 0, 1.0, 1.0, np.diag([1, 1, 1]), 1, 0.)      # Link 2
     # ]
 
-    time_step = np.linspace(0, 5, 10000)  # Time steps from 0 to 5 seconds
+    time_step = np.linspace(0, 5, 500)  # Time steps from 0 to 5 seconds
     torques = []
 
     torquesLE = []
 
 
-    out_dir = './ra'
+    out_dir = './ra/data5s'
 
     trj_data = f"{out_dir}/trajectory_data_gen{n}.csv"
 
@@ -370,7 +370,7 @@ if __name__ == "__main__":
     df = pd.DataFrame(data)
 
     # torque_data = f"{out_dir}/torquesNE{n}.csv"
-    torque_data = f"{out_dir}/data5s/torquesNE{n}.csv"
+    torque_data = f"{out_dir}/torquesNE{n}.csv"
 
 
 

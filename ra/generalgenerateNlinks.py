@@ -68,7 +68,7 @@ if __name__ == "__main__":
     # Time parameters
     for n in range(2, 21):
         t_start = 0
-        t_end = 5
+        t_end = 10
         n_points = t_end*100
         n_links = n  # Number of links
         t = np.linspace(t_start, t_end, n_points)

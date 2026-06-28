@@ -69,7 +69,7 @@ if __name__ == "__main__":
     t_start = 0
     t_end = 10
     n_points = t_end * 100  # 100 points per second
-    n_links = 2  # Number of links
+    n_links = 6  # Number of links
     t = np.linspace(t_start, t_end, n_points)
 
     # Generate trajectory

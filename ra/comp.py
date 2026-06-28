@@ -1,3 +1,5 @@
+import csv
+
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
@@ -20,17 +22,19 @@ def show_last_link(torques_le, torques_ne, torques_fst, time, n):
     plt.show()
 
 if __name__ == "__main__":
-    n = 7
+    n = 3
 
     # out_dir = './ra'
     # out_dir = './ra/data5s'
-    out_dir = './data10s'
+    out_dir = './ra/data5s'
 
 
-    t_end = 10
+    t_end = 5
     csv_name_le= f"{out_dir}/torquesLE{n}.csv"
     csv_name_ne= f"{out_dir}/torquesNE{n}.csv"
     csv_name_fst= f"{out_dir}/torquesFst{n}.csv"
+    csv_name_ham= f"{out_dir}/torquesHam{n}.csv"
+
     # csv_name_fst= f"{out_dir}/torquesFst{3}.csv"
 
 
@@ -38,6 +42,7 @@ if __name__ == "__main__":
     torques_le = pd.read_csv(csv_name_le)
     torques_ne = pd.read_csv(csv_name_ne)
     torques_fst = pd.read_csv(csv_name_fst)
+    torques_ham = pd.read_csv(csv_name_ham)
 
     # Create time vector
     time = np.linspace(0, t_end, len(torques_le))
@@ -61,7 +66,8 @@ if __name__ == "__main__":
         plt.subplot(n_joints, 1, i+1)
         plt.plot(time, torques_le[f't{i+1}'], 'b-', label='Lagrange', linewidth=lw)
         plt.plot(time, torques_ne[f't{i+1}'], 'r--', label='Newton-Euler', linewidth=lw)
-        plt.plot(time, torques_fst[f't{i+1}'], 'g-.', label='Featherstone', linewidth=lw)
+        # plt.plot(time, torques_fst[f't{i+1}'], 'g-.', label='Featherstone', linewidth=lw)
+        plt.plot(time, torques_ham[f't{i+1}'], 'm:', label='Hamiltonian', linewidth=lw)
         plt.title(f'Joint {i+1} Torque Comparison', fontsize=fs)
         plt.xlabel('Time (s)', fontsize=fs-1)
         plt.ylabel('Torque (Nm)', fontsize=fs-1)
