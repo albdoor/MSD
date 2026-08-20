@@ -23,7 +23,7 @@ def show_last_link(torques_le, torques_ne, torques_fst, torques_ham, time, n):
     plt.show()
 
 if __name__ == "__main__":
-    n = 2
+    n = 3
 
     # out_dir = './ra'
     # out_dir = './ra/data5s'

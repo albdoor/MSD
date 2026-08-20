@@ -491,7 +491,7 @@ def gibbs_appell_inverse_dynamics(
         # ----------------------------------------------------
 
         tau[idx] = (
-            -lambd[i] @ w_i(alpha) + b*qdd[idx]
+            -lambd[i] @ w_i(alpha) + b*qd[idx]
         )
 
     return (
@@ -506,7 +506,7 @@ def link_data(n):
         # if i == 2:
         #     links.append((0, 0, 1, 0.001, np.diag([0, 1/12 * 1, 1/12 * 1]), 1, 0.))
         # else:
-            links.append((0, 0, 1.0, 1.0, np.diag([0, 1/12 * 1, 1/12 * 1]), 1, 0.0))
+            links.append((0, 0, 1.0, 1.0, np.diag([0, 1/12 * 1, 1/12 * 1]), 1, 50.0))
     return links
 
 
@@ -529,7 +529,7 @@ def plot_graphs(n, data1, data2):
 
 if __name__ == "__main__":
 
-    n = 2
+    n = 3
 
     # links = [
     #     (0, 0, 1.0, 1.0, np.diag([0.0, 1/12 * 1, 1/12 * 1]), 1, 0.),  # Link 1

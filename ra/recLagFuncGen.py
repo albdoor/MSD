@@ -388,7 +388,7 @@ def link_data(n):
             [0, 0, 0, 0],
             [0, 0, 0, 0],
             [-0.5 * m1 * l1, 0, 0, m1],
-        ]), 1, 0.))
+        ]), 1, 50.))
     return links
 
 # 11.07.25
@@ -405,7 +405,7 @@ if __name__ == "__main__":
     l1 = 1
     l2 = 1
 
-    n = 2
+    n = 3
 
     # Define the manipulator links: (theta, alpha, length, mass, inertia tensor, joint type: 0 - translational, 1 - rotational, damping coeff.)
     '''
