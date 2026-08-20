@@ -388,7 +388,7 @@ def link_data(n):
             [0, 0, 0, 0],
             [0, 0, 0, 0],
             [-0.5 * m1 * l1, 0, 0, m1],
-        ]), 1, 50.))
+        ]), 1, 0.))
     return links
 
 # 11.07.25
@@ -405,7 +405,7 @@ if __name__ == "__main__":
     l1 = 1
     l2 = 1
 
-    n = 3
+    n = 2
 
     # Define the manipulator links: (theta, alpha, length, mass, inertia tensor, joint type: 0 - translational, 1 - rotational, damping coeff.)
     '''
@@ -482,14 +482,14 @@ if __name__ == "__main__":
             [0, 0, 0, 0],
         ]), 1, 0.)]
     '''
-    time_step = np.linspace(0, 5, 10000)  # Time steps from 0 to 5 seconds
+    time_step = np.linspace(0, 5, 500)  # Time steps from 0 to 5 seconds
     torques = []
 
     torquesLE = []
 
     out_dir = './ra'
 
-    trj_data = f"{out_dir}/trajectory_data_gen{n}.csv"
+    trj_data = f"{out_dir}/data5s/trajectory_data_gen{n}.csv"
 
     q_csv, qd_csv, qdd_csv = load_joint_data(trj_data, n, len(time_step), 'csv') # './providedForward/rl_multilink_simulation.csv'
 

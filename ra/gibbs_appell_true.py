@@ -506,7 +506,7 @@ def link_data(n):
         # if i == 2:
         #     links.append((0, 0, 1, 0.001, np.diag([0, 1/12 * 1, 1/12 * 1]), 1, 0.))
         # else:
-            links.append((0, 0, 1.0, 1.0, np.diag([0, 1/12 * 1, 1/12 * 1]), 1, 50.0))
+            links.append((0, 0, 1.0, 1.0, np.diag([0, 1/12 * 1, 1/12 * 1]), 1, 0.0))
     return links
 
 
@@ -529,7 +529,7 @@ def plot_graphs(n, data1, data2):
 
 if __name__ == "__main__":
 
-    n = 3
+    n = 2
 
     # links = [
     #     (0, 0, 1.0, 1.0, np.diag([0.0, 1/12 * 1, 1/12 * 1]), 1, 0.),  # Link 1
@@ -569,7 +569,7 @@ if __name__ == "__main__":
 
 
 
-    def ham(time_step, q_csv, qd_csv, qdd_csv, links, gravity):
+    def gib(time_step, q_csv, qd_csv, qdd_csv, links, gravity):
         for t_idx in range(len(time_step)): #len(time)
             q = q_csv[t_idx]   # Joint positions from CSV
             qd = qd_csv[t_idx] # Joint velocities from CSV
@@ -581,7 +581,7 @@ if __name__ == "__main__":
             
         return torques, torques2
 
-    torques, torques2 = ham(time_step, q_csv, qd_csv, qdd_csv, links, gravity)
+    torques, torques2 = gib(time_step, q_csv, qd_csv, qdd_csv, links, gravity)
 
     
     torques = np.array(torques)
@@ -597,7 +597,7 @@ if __name__ == "__main__":
     df = pd.DataFrame(data)
 
     # torque_data = f"{out_dir}/torquesNE{n}.csv"
-    torque_data = f"{out_dir}/torquesHam{n}.csv"
+    torque_data = f"{out_dir}/torquesGibbs{n}.csv"
 
 
 
@@ -608,3 +608,8 @@ if __name__ == "__main__":
     # Plot the torques
 
     plot_graphs(n, torques2, torques)
+
+
+
+# NE LE Hamiltonian Featherstone Methodology -> Simulations, Results Remove project picture, plan for the research, not cite eqs in methodology,
+# change a bit graphs

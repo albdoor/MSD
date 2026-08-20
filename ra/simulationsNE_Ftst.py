@@ -10,7 +10,7 @@ from datetime import datetime
 from recLagFuncGen import recLag, load_joint_data, link_data as rlg_link_data, plot_graphs
 from rneagen import rnea, link_data as rnea_link_data
 from featherstone import featherstone_id, link_data as fst_link_data
-from hamiltonian import hamiltonian_id, link_data as ham_link_data
+from ra.gibbs_appell_true import hamiltonian_id, link_data as ham_link_data
 
 # def plot_graphs_torque(n, torques_le, torques_ne, torques_fst, time):
 #     lw = 2.5           # line width

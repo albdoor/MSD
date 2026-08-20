@@ -262,7 +262,7 @@ def link_data(n):
         # if i == 2:
         #     links.append((0, 0, 1, 0.001, np.diag([0, 1/12 * 1, 1/12 * 1]), 1, 0.))
         # else:
-            links.append((0, 0, 1.0, 1.0, np.diag([0, 1/12 * 1, 1/12 * 1]), 1, 50.0))
+            links.append((0, 0, 1.0, 1.0, np.diag([0, 1/12 * 1, 1/12 * 1]), 1, 0.0))
     return links
 
 

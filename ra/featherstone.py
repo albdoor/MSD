@@ -251,7 +251,7 @@ def link_data(n, l=1.0, m=1.0):
         #     links.append((0,0,l,m,Ic,1,0.0))
         # else:
             Ic = np.diag([0.0, (1/12)*m*l*l, (1/12)*m*l*l])
-            links.append((0,0,l,m,Ic,1,50.0))
+            links.append((0,0,l,m,Ic,1,0.0))
 
     return links
 
@@ -276,7 +276,7 @@ if __name__ == "__main__":
 
     # Define the manipulator links: (theta, alpha, length, mass, inertia tensor, joint type: 0 - translational, 1 - rotational, damping coeff.)
     # n = 2
-    n = 4
+    n = 2
 
     # links = [
     #     (0, 0, 1.0, 1.0, np.diag([0.0, 1/12 * 1, 1/12 * 1]), 1, 0.),  # Link 1
@@ -291,7 +291,7 @@ if __name__ == "__main__":
     #     (0, 0, 1.0, 1.0, np.diag([1, 1, 1]), 1, 0.)      # Link 2
     # ]
 
-    time_step = np.linspace(0, 5, 10000)  # Time steps from 0 to 5 seconds
+    time_step = np.linspace(0, 5, 500)  # Time steps from 0 to 5 seconds
     torques = []
 
     torquesLE = []
@@ -299,7 +299,7 @@ if __name__ == "__main__":
 
     out_dir = './ra'
 
-    trj_data = f"{out_dir}/trajectory_data_gen{n}.csv"
+    trj_data = f"{out_dir}/data5s/trajectory_data_gen{n}.csv"
 
     q_csv, qd_csv, qdd_csv = load_joint_data(trj_data, n, len(time_step), 'csv') # './providedForward/rl_multilink_simulation.csv' './data/LEForw.csv'
     # './providedForwardMod/rl_multilink_simulation2.csv'
