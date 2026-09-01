@@ -8,12 +8,13 @@ print(os.getcwd())
 
 # Read the CSV files
 
-def show_last_link(torques_le, torques_ne, torques_fst, torques_ham, time, n):
+def show_last_link(torques_le, torques_ne, torques_fst, torques_ham, torques_lie, time, n):
     plt.figure(figsize=(10, 6))
     plt.plot(time, torques_le[f't{n}'], 'b-', label='Lagrange', linewidth=2.5)
     plt.plot(time, torques_ne[f't{n}'], 'r--', label='Newton-Euler', linewidth=2.5)
     plt.plot(time, torques_fst[f't{n}'], 'g-.', label='Featherstone', linewidth=2.5)
     plt.plot(time, torques_ham[f't{n}'], 'm:', label='Gibbs-Appell', linewidth=2.5)
+    plt.plot(time, torques_lie[f't{n}'], 'c:', label='Lie Group', linewidth=2.5)
     plt.title(f'Joint {n} Torque Comparison', fontsize=16)
     plt.xlabel('Time (s)', fontsize=14)
     plt.ylabel('Torque (Nm)', fontsize=14)
@@ -35,6 +36,7 @@ if __name__ == "__main__":
     csv_name_ne= f"{out_dir}/torquesNE{n}.csv"
     csv_name_fst= f"{out_dir}/torquesFst{n}.csv"
     csv_name_gib= f"{out_dir}/torquesGibbs{n}.csv"
+    csv_name_lie = f"{out_dir}/torquesLie_Group{n}.csv"
 
     # csv_name_fst= f"{out_dir}/torquesFst{3}.csv"
 
@@ -44,7 +46,7 @@ if __name__ == "__main__":
     torques_ne = pd.read_csv(csv_name_ne)
     torques_fst = pd.read_csv(csv_name_fst)
     torques_gib = pd.read_csv(csv_name_gib)
-
+    torques_lie = pd.read_csv(csv_name_lie) 
     # Create time vector
     time = np.linspace(0, t_end, len(torques_le))
 
@@ -69,6 +71,7 @@ if __name__ == "__main__":
         plt.plot(time, torques_ne[f't{i+1}'], 'r--', label='Newton-Euler', linewidth=lw)
         plt.plot(time, torques_fst[f't{i+1}'], 'g-.', label='Featherstone', linewidth=lw)
         plt.plot(time, torques_gib[f't{i+1}'], 'm:', label='Gibbs-Appell', linewidth=lw)
+        plt.plot(time, torques_lie[f't{i+1}'], 'c:', label='Lie Group', linewidth=lw)
         plt.title(f'Joint {i+1} Torque Comparison', fontsize=fs)
         plt.xlabel('Time (s)', fontsize=fs-1)
         plt.ylabel('Torque (Nm)', fontsize=fs-1)
@@ -128,7 +131,7 @@ if __name__ == "__main__":
         
     plt.show()
         
-    show_last_link(torques_le, torques_ne, torques_fst, torques_gib, time, n)
+    show_last_link(torques_le, torques_ne, torques_fst, torques_gib, torques_lie, time, n)
 
 
     # read Hamiltonian
