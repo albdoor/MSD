@@ -85,8 +85,8 @@ def rotation_matrix_to_base(q, links, link_idx):
             if j_type == 1:
                 # print(j)
                 temp = np.array([
-                    [np.cos(q[link_idx]), -np.sin(q[link_idx]), 0],
-                    [np.sin(q[link_idx]), np.cos(q[link_idx]), 0],
+                    [np.cos(q[j]), -np.sin(q[j]), 0],
+                    [np.sin(q[j]), np.cos(q[j]), 0],
                     [0, 0, 1]
                 ])
                 trigCount += 1
@@ -143,8 +143,8 @@ def rotation_matrix(i, j, q, links):
         for k in range(i, j):
             theta, alpha, r, m, I, j_type, b = links[k]
             temp = np.array([
-            [np.cos(q[j]), -np.sin(q[j]), 0],
-            [np.sin(q[j]), np.cos(q[j]), 0],
+            [np.cos(q[k]), -np.sin(q[j]), 0],
+            [np.sin(q[k]), np.cos(q[j]), 0],
             [0, 0, 1]
             ])
             res = res @ temp
@@ -283,7 +283,7 @@ if __name__ == "__main__":
 
     # Define the manipulator links: (theta, alpha, length, mass, inertia tensor, joint type: 0 - translational, 1 - rotational, damping coeff.)
     # n = 2
-    n = 3
+    n = 4
 
     # links = [
     #     (0, 0, 1.0, 1.0, np.diag([0.0, 1/12 * 1, 1/12 * 1]), 1, 0.),  # Link 1

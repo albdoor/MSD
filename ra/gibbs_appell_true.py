@@ -10,7 +10,10 @@ import time
 # ============================================================
 
 def tau_input(t):
-    return np.array([0.5 * np.sin(3 * t), 0.88 * np.cos(2 * t), 0, 0, 0, 0, 0, 0, 0, 0, 0]) # , 0.075 * np.cos(2 * t) 0.88 * np.cos(2 * t), 0.88 * np.cos(2 * t)
+    return np.array([0.5 * np.sin(3 * t), 0.88 * np.cos(2 * t), 0, 
+                     0, 0, 0, 0, 0, 0, 0, 0,
+                     0, 0, 0, 0, 0, 0, 0, 0,
+                     0, 0, 0, 0, 0, 0, 0, 0]) # , 0.075 * np.cos(2 * t) 0.88 * np.cos(2 * t), 0.88 * np.cos(2 * t)
 # 0, 0 * np.sin(1.5 * t), 0 * np.cos(2 * t)
 
 
@@ -529,7 +532,7 @@ def plot_graphs(n, data1, data2):
 
 if __name__ == "__main__":
 
-    n = 3
+    n = 20
 
     # links = [
     #     (0, 0, 1.0, 1.0, np.diag([0.0, 1/12 * 1, 1/12 * 1]), 1, 0.),  # Link 1

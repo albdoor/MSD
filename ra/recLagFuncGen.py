@@ -239,8 +239,8 @@ def coord_transform_new(i, j, q, links):
         for k in range(i, j):
             theta, alpha, r, m, I, j_type, b = links[k]
             temp = np.array([
-                [np.cos(q[j]), -np.sin(q[j]), 0, r * np.cos(q[j])],
-                [np.sin(q[j]), np.cos(q[j]), 0, r * np.sin(q[j])],
+                [np.cos(q[k]), -np.sin(q[k]), 0, r * np.cos(q[k])],
+                [np.sin(q[k]), np.cos(q[k]), 0, r * np.sin(q[k])],
                 [0, 0, 1, 0],
                 [0, 0, 0, 1]
             ])
@@ -405,7 +405,7 @@ if __name__ == "__main__":
     l1 = 1
     l2 = 1
 
-    n = 3
+    n = 4
 
     # Define the manipulator links: (theta, alpha, length, mass, inertia tensor, joint type: 0 - translational, 1 - rotational, damping coeff.)
     '''

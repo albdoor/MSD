@@ -11,6 +11,7 @@ import os
 from recLagFuncGen import recLag, load_joint_data, link_data as rlg_link_data, plot_graphs
 from rneagen import rnea, link_data as rnea_link_data
 from featherstone import featherstone_id, link_data as fst_link_data
+from gibbs_appell_true import gibbs_appell_inverse_dynamics, link_data as gib_link_data
 
 # def plot_graphs_torque(n, torques_le, torques_ne, torques_fst, time):
 #     lw = 2.5           # line width
@@ -30,8 +31,8 @@ from featherstone import featherstone_id, link_data as fst_link_data
 
 
 if __name__ == "__main__":
-    out_dir = './ra/data5s'
-    times_csv = f"{out_dir}/execution_times5sLE.csv"
+    out_dir = './ra/data50s'
+    times_csv = f"{out_dir}/execution_times50sGibbs.csv"
 
     if os.path.exists(times_csv):
         existing_df = pd.read_csv(times_csv)
@@ -39,11 +40,11 @@ if __name__ == "__main__":
     else:
         execution_times = []
 
-    for n in range(2, 18):
+    for n in range(2, 21):
         m1 = 1.0
         l1 = 1.0
         g = 9.81
-        t_end = 5
+        t_end = 50
         time_step = np.linspace(0, t_end, t_end * 100)  # Time steps from 0 to 40 seconds
 
         torques = []
@@ -58,14 +59,17 @@ if __name__ == "__main__":
         links_rnea = rnea_link_data(n)
         links_fst = fst_link_data(n)
         links_rlg = rlg_link_data(n)
+        links_gibbs = gib_link_data(n)
 
 
         g_ftst = np.array([0, -g, 0])
         g_rlg = np.array([[0, -g, 0, 0]])
         g_rnea = np.array([0, g, 0])
+        g_gibbs = np.array([0, g, 0])
         torques_rlg = []
         torques_rnea = []
         torques_ftst = []
+        torques_gibbs = []
         time_elapsed = []
         
         # print('Performing FTST')
@@ -124,7 +128,48 @@ if __name__ == "__main__":
         # df.to_csv(torque_data, index=False)
 
 
-        print('Performing RLG')
+        # print('Performing RLG')
+        # now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        # print(now)
+        # t_total_start = time.perf_counter()
+        # for t_idx in range(len(time_step)): #len(time)
+        #     q = q_csv[t_idx]   # Joint positions from CSV
+        #     qd = qd_csv[t_idx] # Joint velocities from CSV
+        #     qdd = qdd_csv[t_idx] # Joint accelerations from CSV
+        #     torques_rlg.append(recLag(q, qd, qdd, links_rlg, g_rlg))  # Compute torques using RLG
+    
+     
+        # t_total_end = time.perf_counter()
+        # elapsed = t_total_end - t_total_start
+        # time_elapsed.append(elapsed)
+
+        # torques_rlg = np.array(torques_rlg)
+
+        
+        # cols = torques_rlg.shape[1] if (hasattr(torques_rlg, "ndim") and torques_rlg.ndim > 1) else 1
+        # data = {f't{i+1}': (torques_rlg[:, i] if cols > 1 else torques_rlg[:]) for i in range(cols)}
+
+        # df = pd.DataFrame(data)
+
+        # torque_data = f"{out_dir}/torquesLE{n}.csv"
+
+        # df.to_csv(torque_data, index=False)
+        # print(f'Completed computations for n={n} joints.')
+        # # print(f'Time taken for FTST: {time_elapsed[0]:.4f} seconds')
+        # # print(f'Time taken for RNEA: {time_elapsed[1]:.4f} seconds')
+        # print(f'Time taken for RLG: {time_elapsed[0]:.4f} seconds')
+
+        # execution_times.append({
+        #     'num_links': n,
+        #     'le_time': time_elapsed[0]
+        # })            
+        # df_times = pd.DataFrame(execution_times)
+        # times_csv = f"{out_dir}/execution_times50sLE.csv"
+        # df_times.to_csv(times_csv, index=False)
+        # print(f'\nExecution times saved to {times_csv}')
+
+
+        print('Performing Gibbs-Appell')
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         print(now)
         t_total_start = time.perf_counter()
@@ -132,39 +177,37 @@ if __name__ == "__main__":
             q = q_csv[t_idx]   # Joint positions from CSV
             qd = qd_csv[t_idx] # Joint velocities from CSV
             qdd = qdd_csv[t_idx] # Joint accelerations from CSV
-            torques_rlg.append(recLag(q, qd, qdd, links_rlg, g_rlg))  # Compute torques using RLG
+            torques_gibbs.append(gibbs_appell_inverse_dynamics(q, qd, qdd, links_gibbs, g_gibbs))  # Compute torques using Gibbs-Appell
     
      
         t_total_end = time.perf_counter()
         elapsed = t_total_end - t_total_start
         time_elapsed.append(elapsed)
 
-        torques_rlg = np.array(torques_rlg)
+        torques_gibbs = np.array(torques_gibbs)
 
         
-        cols = torques_rlg.shape[1] if (hasattr(torques_rlg, "ndim") and torques_rlg.ndim > 1) else 1
-        data = {f't{i+1}': (torques_rlg[:, i] if cols > 1 else torques_rlg[:]) for i in range(cols)}
+        cols = torques_gibbs.shape[1] if (hasattr(torques_gibbs, "ndim") and torques_gibbs.ndim > 1) else 1
+        data = {f't{i+1}': (torques_gibbs[:, i] if cols > 1 else torques_gibbs[:]) for i in range(cols)}
 
         df = pd.DataFrame(data)
 
-        torque_data = f"{out_dir}/torquesLE{n}.csv"
+        torque_data = f"{out_dir}/torquesGibbs{n}.csv"
 
         df.to_csv(torque_data, index=False)
         print(f'Completed computations for n={n} joints.')
         # print(f'Time taken for FTST: {time_elapsed[0]:.4f} seconds')
         # print(f'Time taken for RNEA: {time_elapsed[1]:.4f} seconds')
-        print(f'Time taken for RLG: {time_elapsed[0]:.4f} seconds')
+        print(f'Time taken for Gibbs-Appell: {time_elapsed[0]:.4f} seconds')
 
         execution_times.append({
             'num_links': n,
-            'le_time': time_elapsed[0]
+            'gib_time': time_elapsed[0]
         })            
         df_times = pd.DataFrame(execution_times)
-        times_csv = f"{out_dir}/execution_times50sLE.csv"
+        times_csv = f"{out_dir}/execution_times50sGibbs.csv"
         df_times.to_csv(times_csv, index=False)
         print(f'\nExecution times saved to {times_csv}')
-
-
 
 
 
