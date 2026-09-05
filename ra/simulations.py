@@ -12,6 +12,7 @@ from recLagFuncGen import recLag, load_joint_data, link_data as rlg_link_data, p
 from rneagen import rnea, link_data as rnea_link_data
 from featherstone import featherstone_id, link_data as fst_link_data
 from gibbs_appell_true import gibbs_appell_inverse_dynamics, link_data as gib_link_data
+from lie_group import lie_group_inverse_dynamics, link_data as lie_link_data
 
 # def plot_graphs_torque(n, torques_le, torques_ne, torques_fst, time):
 #     lw = 2.5           # line width

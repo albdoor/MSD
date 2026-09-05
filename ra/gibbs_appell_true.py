@@ -532,7 +532,7 @@ def plot_graphs(n, data1, data2):
 
 if __name__ == "__main__":
 
-    n = 20
+    n = 3
 
     # links = [
     #     (0, 0, 1.0, 1.0, np.diag([0.0, 1/12 * 1, 1/12 * 1]), 1, 0.),  # Link 1

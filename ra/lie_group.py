@@ -556,7 +556,7 @@ class Robot:
 
         df = pd.DataFrame(data)
 
-        torque_data = f"{out_dir}/data5s/torquesLie_Group{4}.csv"
+        torque_data = f"{out_dir}"
         # torque_data = f"{out_dir}/torquesFst{n}.csv"
         df.to_csv(torque_data, index=False)
 
@@ -720,10 +720,10 @@ def generate_torques(
 def example():
     """
     Example corresponding to the execution pattern of your existing codes.
-    Generates an arbitrary 4-link trajectory, calculates all torques, and
+    Generates an arbitrary n-link trajectory, calculates all torques, and
     writes the result to a CSV.
     """
-    n = 4
+    n = 5
     N = 500
 
     robot = make_planar_robot(
@@ -745,7 +745,7 @@ def example():
 
     tau = robot.inverse_dynamics_trajectory(
         q, qd, qdd,
-        gravity=(0.0, -9.81, 0.0),
+        gravity=(0.0, 9.81, 0.0),
     )
 
     return robot, time_step, q, qd, qdd, tau
@@ -774,9 +774,9 @@ if __name__ == "__main__":
             f"PD={result['positive_definite']}"
         )
 
-    out_dir = './ra'
+    out_dir = f'./ra/data5s/torquesLie_Group{robot.n}.csv'
     print(os.getcwd())  # Print the current working directory
 
     # output = f"{out_dir}/data5s/Lie_group{robot.n}.csv"
     robot.save_torques_csv(out_dir, tau)
-    print(f"\nSaved torque data to: {out_dir}/data5s/Lie_group{robot.n}.csv")
+    print(f"\nSaved torque data to: {out_dir}")
