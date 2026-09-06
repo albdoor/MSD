@@ -137,14 +137,14 @@ def rotation_matrix(i, j, q, links):
             trigCount += 1
             return res  
     elif (j-i > 1): #check
-        res = np.eye(4)
+        res = np.eye(3)
         # print(j)
         # print(i)
         for k in range(i, j):
             theta, alpha, r, m, I, j_type, b = links[k]
             temp = np.array([
-            [np.cos(q[k]), -np.sin(q[j]), 0],
-            [np.sin(q[k]), np.cos(q[j]), 0],
+            [np.cos(q[k]), -np.sin(q[k]), 0],
+            [np.sin(q[k]), np.cos(q[k]), 0],
             [0, 0, 1]
             ])
             res = res @ temp
