@@ -32,8 +32,9 @@ from lie_group_no_class import inverse_dynamics as lie_inverse_dynamics, link_da
 
 
 if __name__ == "__main__":
-    out_dir = './ra/data50s'
-    times_csv = f"{out_dir}/execution_times50sLie.csv"
+    t_end = 50
+    out_dir = f'./ra/data{t_end}s'
+    times_csv = f"{out_dir}/execution_times{t_end}sLie.csv"
 
     if os.path.exists(times_csv):
         existing_df = pd.read_csv(times_csv)
@@ -255,7 +256,7 @@ if __name__ == "__main__":
             'lie_time': time_elapsed[0]
         })            
         df_times = pd.DataFrame(execution_times)
-        times_csv = f"{out_dir}/execution_times50sLie.csv"
+        times_csv = f"{out_dir}/execution_times{t_end}sLie.csv"
         df_times.to_csv(times_csv, index=False)
         print(f'\nExecution times saved to {times_csv}')
 # number of additions, multiplications, trigonometric function calls

@@ -10,7 +10,8 @@ from datetime import datetime
 from recLagFuncGen import recLag, load_joint_data, link_data as rlg_link_data, output_counters as rlg_output_counters, plot_graphs, reset_counters as rlg_reset_counters
 from rneagen import rnea, link_data as rnea_link_data, output_counters as rnea_output_counters, reset_counters as rnea_reset_counters
 from featherstone import featherstone_id, link_data as fst_link_data, output_counters as ftst_output_counters, reset_counters as ftst_reset_counters
-
+from lie_group_no_class import inverse_dynamics as lie_inverse_dynamics, link_data as lie_link_data, output_counters as lie_output_counters, reset_counters as lie_reset_counters
+from gibbs_appell_true import gibbs_appell_inverse_dynamics, link_data as gibbs_link_data, output_counters as gibbs_output_counters, reset_counters as gibbs_reset_counters
 # def plot_graphs_torque(n, torques_le, torques_ne, torques_fst, time):
 #     lw = 2.5           # line width
 #     fs = 16
@@ -35,7 +36,7 @@ if __name__ == "__main__":
         m1 = 1.0
         l1 = 1.0
         g = 9.81
-        t_end = 90
+        t_end = 50
         time_step = np.linspace(0, t_end, t_end * 100)  # Time steps from 0 to 50 seconds
 
         torques = []
@@ -43,7 +44,7 @@ if __name__ == "__main__":
         torquesLE = []
 
 
-        out_dir = './data90s'
+        out_dir = f'./ra/data{t_end}s'
 
         trj_data = f"{out_dir}/trajectory_data_gen{n}.csv"
 
@@ -53,105 +54,178 @@ if __name__ == "__main__":
         links_rnea = rnea_link_data(n)
         links_fst = fst_link_data(n)
         links_rlg = rlg_link_data(n)
-
+        links_lie = lie_link_data(n)    
+        links_gibbs = gibbs_link_data(n)
 
         g_ftst = np.array([0, -g, 0])
         g_rlg = np.array([[0, -g, 0, 0]])
         g_rnea = np.array([0, g, 0])
+        g_lie = np.array([0, g, 0])
+        g_gibbs = np.array([0, g, 0])
+
         torques_rlg = []
         torques_rnea = []
         torques_ftst = []
+        torques_lie = []
+        torques_gibbs = []
+
         rlg_counters = []
         rnea_counters = []
         ftst_counters = []
+        lie_counters = []
+        gibbs_counters = []
 
         addCount_rlg, multCount_rlg, trigCount_rlg = 0, 0, 0
         addCount_rnea, multCount_rnea, trigCount_rnea = 0, 0, 0
         addCount_ftst, multCount_ftst, trigCount_ftst = 0,  0, 0
+        addCount_lie, multCount_lie, trigCount_lie = 0, 0, 0
+        addCount_gibbs, multCount_gibbs, trigCount_gibbs = 0, 0, 0
         
-        print('Performing FTST')
-        t_total_start = time.perf_counter()
+        # print('Performing FTST')
+        # t_total_start = time.perf_counter()
         
-        for t_idx in range(1): #len(time)
-            q = q_csv[t_idx]   # Joint positions from CSV
-            qd = qd_csv[t_idx] # Joint velocities from CSV
-            qdd = qdd_csv[t_idx] # Joint accelerations from CSV
-            torques_ftst.append(featherstone_id(q, qd, qdd, links_fst, g_ftst))  # Compute torques using FTST
-            addCount_ftst, multCount_ftst, trigCount_ftst = ftst_output_counters()
-            ftst_reset_counters()
+        # for t_idx in range(1): #len(time)
+        #     q = q_csv[t_idx]   # Joint positions from CSV
+        #     qd = qd_csv[t_idx] # Joint velocities from CSV
+        #     qdd = qdd_csv[t_idx] # Joint accelerations from CSV
+        #     torques_ftst.append(featherstone_id(q, qd, qdd, links_fst, g_ftst))  # Compute torques using FTST
+        #     addCount_ftst, multCount_ftst, trigCount_ftst = ftst_output_counters()
+        #     ftst_reset_counters()
 
-        t_total_end = time.perf_counter()
-        elapsed = t_total_end - t_total_start
+        # t_total_end = time.perf_counter()
+        # elapsed = t_total_end - t_total_start
 
 
-        # time_elapsed.append(elapsed)
+        # # time_elapsed.append(elapsed)
         
 
-        torques_ftst = np.array(torques_ftst)
+        # torques_ftst = np.array(torques_ftst)
 
 
-        print('Performing RNEA')
-        t_total_start = time.perf_counter()
+        # print('Performing RNEA')
+        # t_total_start = time.perf_counter()
 
-        for t_idx in range(1): #len(time)
-            q = q_csv[t_idx]   # Joint positions from CSV
-            qd = qd_csv[t_idx] # Joint velocities from CSV
-            qdd = qdd_csv[t_idx] # Joint accelerations from CSV
-            torques_rnea.append(rnea(q, qd, qdd, links_rnea, g_rnea))  # Compute torques using RNEA
-            addCount_rnea, multCount_rnea, trigCount_rnea = rnea_output_counters()
-            rnea_reset_counters()
+        # for t_idx in range(1): #len(time)
+        #     q = q_csv[t_idx]   # Joint positions from CSV
+        #     qd = qd_csv[t_idx] # Joint velocities from CSV
+        #     qdd = qdd_csv[t_idx] # Joint accelerations from CSV
+        #     torques_rnea.append(rnea(q, qd, qdd, links_rnea, g_rnea))  # Compute torques using RNEA
+        #     addCount_rnea, multCount_rnea, trigCount_rnea = rnea_output_counters()
+        #     rnea_reset_counters()
 
 
 
-        t_total_end = time.perf_counter()
-        elapsed = t_total_end - t_total_start
-        # time_elapsed.append(elapsed)
+        # t_total_end = time.perf_counter()
+        # elapsed = t_total_end - t_total_start
+        # # time_elapsed.append(elapsed)
         
         
-        torques_rnea = np.array(torques_rnea)
+        # torques_rnea = np.array(torques_rnea)
 
  
 
-        print('Performing RLG')
-        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        print(now)
+        # print('Performing RLG')
+        # now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        # print(now)
+        # t_total_start = time.perf_counter()
+        # for t_idx in range(1): #len(time)
+        #     q = q_csv[t_idx]   # Joint positions from CSV
+        #     qd = qd_csv[t_idx] # Joint velocities from CSV
+        #     qdd = qdd_csv[t_idx] # Joint accelerations from CSV
+        #     torques_rlg.append(recLag(q, qd, qdd, links_rlg, g_rlg))  # Compute torques using RLG
+        #     addCount_rlg, multCount_rlg, trigCount_rlg = rlg_output_counters()
+        #     rlg_reset_counters()
+    
+     
+        # t_total_end = time.perf_counter()
+        # elapsed = t_total_end - t_total_start
+        # # time_elapsed.append(elapsed)
+
+        # torques_rlg = np.array(torques_rlg)
+
+
+        print('Performing Lie Group')
         t_total_start = time.perf_counter()
+        
         for t_idx in range(1): #len(time)
             q = q_csv[t_idx]   # Joint positions from CSV
             qd = qd_csv[t_idx] # Joint velocities from CSV
             qdd = qdd_csv[t_idx] # Joint accelerations from CSV
-            torques_rlg.append(recLag(q, qd, qdd, links_rlg, g_rlg))  # Compute torques using RLG
-            addCount_rlg, multCount_rlg, trigCount_rlg = rlg_output_counters()
-            rlg_reset_counters()
-    
-     
+            torques_lie.append(lie_inverse_dynamics(q, qd, qdd, links_lie, g_lie))  # Compute torques using FTST
+            addCount_lie, multCount_lie, trigCount_lie = lie_output_counters()
+            lie_reset_counters()
+
         t_total_end = time.perf_counter()
         elapsed = t_total_end - t_total_start
+
+
         # time_elapsed.append(elapsed)
+        
 
-        torques_rlg = np.array(torques_rlg)
+        torques_lie = np.array(torques_lie)
 
 
 
+        print('Performing Gibbs Appell')
+        t_total_start = time.perf_counter()
+        
+        for t_idx in range(1): #len(time)
+            q = q_csv[t_idx]   # Joint positions from CSV
+            qd = qd_csv[t_idx] # Joint velocities from CSV
+            qdd = qdd_csv[t_idx] # Joint accelerations from CSV
+            torques_gibbs.append(gibbs_appell_inverse_dynamics(q, qd, qdd, links_gibbs, g_gibbs))  # Compute torques using Gibbs Appell
+            addCount_gibbs, multCount_gibbs, trigCount_gibbs = gibbs_output_counters()
+            gibbs_reset_counters()
+
+        t_total_end = time.perf_counter()
+        elapsed = t_total_end - t_total_start
+
+
+        # time_elapsed.append(elapsed)
+        
+
+        torques_gibbs = np.array(torques_gibbs)
+
+    
+
+
+
+        # print(f'Completed computations for n={n} joints.')
+        
+        # # Store execution time data
+        # execution_counters.append({
+        #     'num_links': n,
+        #     'rlg_AddCount': addCount_rlg,
+        #     'rlg_MultCount': multCount_rlg,
+        #     'rlg_TrigCount': trigCount_rlg,
+        #     'rnea_AddCount': addCount_rnea,
+        #     'rnea_MultCount': multCount_rnea,
+        #     'rnea_TrigCount': trigCount_rnea,
+        #     'ftst_AddCount': addCount_ftst,
+        #     'ftst_MultCount': multCount_ftst,
+        #     'ftst_TrigCount': trigCount_ftst
+        # })
+        # # print(f'Time taken for RLG: {time_elapsed[0]:.4f} seconds')
+        # df_times = pd.DataFrame(execution_counters)
+        # times_csv = f"{out_dir}/execution_counters90s.csv"
+        # df_times.to_csv(times_csv, index=False)
+        # print(f'\nExecution counters saved to {times_csv}')
 
         print(f'Completed computations for n={n} joints.')
         
         # Store execution time data
         execution_counters.append({
             'num_links': n,
-            'rlg_AddCount': addCount_rlg,
-            'rlg_MultCount': multCount_rlg,
-            'rlg_TrigCount': trigCount_rlg,
-            'rnea_AddCount': addCount_rnea,
-            'rnea_MultCount': multCount_rnea,
-            'rnea_TrigCount': trigCount_rnea,
-            'ftst_AddCount': addCount_ftst,
-            'ftst_MultCount': multCount_ftst,
-            'ftst_TrigCount': trigCount_ftst
+            'lie_AddCount': addCount_lie,
+            'lie_MultCount': multCount_lie,
+            'lie_TrigCount': trigCount_lie,
+            'gibbs_AddCount': addCount_gibbs,
+            'gibbs_MultCount': multCount_gibbs,
+            'gibbs_TrigCount': trigCount_gibbs
         })
         # print(f'Time taken for RLG: {time_elapsed[0]:.4f} seconds')
         df_times = pd.DataFrame(execution_counters)
-        times_csv = f"{out_dir}/execution_counters90s.csv"
+        times_csv = f"{out_dir}/execution_counters_Lie_GA_{t_end}s.csv"
         df_times.to_csv(times_csv, index=False)
         print(f'\nExecution counters saved to {times_csv}')
     

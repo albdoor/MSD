@@ -57,6 +57,20 @@ import pandas as pd
 from scipy.linalg import expm
 
 
+addCount = 0
+multCount = 0
+trigCount = 0
+
+
+def reset_counters():
+    global addCount, multCount, trigCount
+    addCount = 0
+    multCount = 0
+    trigCount = 0
+
+def output_counters():
+    return addCount, multCount, trigCount
+
 # =============================================================================
 # DATA LOADING
 # =============================================================================
@@ -204,9 +218,12 @@ def make_transform(R, r):
     """
     Construct an SE(3) homogeneous transformation.
     """
+    global addCount, multCount, trigCount
+
     C = np.eye(4)
     C[0:3, 0:3] = np.asarray(R, dtype=float)
     C[0:3, 3] = np.asarray(r, dtype=float)
+    trigCount += 1
 
     return C
 
@@ -215,12 +232,15 @@ def inverse_transform(C):
     """
     Inverse of an SE(3) transform.
     """
+    global addCount, multCount, trigCount
+
     R = C[0:3, 0:3]
     r = C[0:3, 3]
 
     C_inv = np.eye(4)
     C_inv[0:3, 0:3] = R.T
     C_inv[0:3, 3] = -R.T @ r
+    trigCount += 1
 
     return C_inv
 
@@ -235,9 +255,11 @@ def adjoint(C):
 
     This is the convention used in the body-fixed formulation.
     """
+    global addCount, multCount, trigCount
+
     R = C[0:3, 0:3]
     r = C[0:3, 3]
-
+    trigCount += 1
     return np.block([
         [R,                np.zeros((3, 3))],
         [skew(r) @ R,      R]
@@ -378,12 +400,16 @@ def link_mass_matrix(link):
 
         Theta = I_C - m d^ d^
     """
+    global addCount, multCount, trigCount
 
     B, X, m, I_C, d, damping = link
 
     d_hat = skew(d)
 
     Theta = I_C - m * (d_hat @ d_hat)
+
+    addCount += 1
+    multCount += 1
 
     M = np.block([
         [Theta,              m * d_hat],
@@ -412,6 +438,7 @@ def forward_lie_group(q, qd, qdd, links):
     Vdot : (n,6)
         Body-fixed accelerations.
     """
+    global addCount, multCount, trigCount
 
     n = len(links)
 
@@ -441,12 +468,14 @@ def forward_lie_group(q, qd, qdd, links):
         motion = exp_screw(X_i, q[i])
 
         C[i] = C_parent @ B_i @ motion
+        multCount += 2
 
         # -------------------------------------------------------------
         # C_(i,i-1) = C_i^(-1) C_(i-1)
         # -------------------------------------------------------------
 
         Crel[i] = inverse_transform(C[i]) @ C_parent
+        multCount += 1
 
         Ad = adjoint(Crel[i])
 
@@ -458,6 +487,8 @@ def forward_lie_group(q, qd, qdd, links):
             Ad @ V_parent
             + X_i * qd[i]
         )
+        addCount += 1
+        multCount += 1
 
         # -------------------------------------------------------------
         # Vdot_i =
@@ -471,6 +502,8 @@ def forward_lie_group(q, qd, qdd, links):
             - qd[i] * (ad_matrix(X_i) @ V[i])
             + X_i * qdd[i]
         )
+        addCount += 2
+        multCount += 2
 
         C_parent = C[i]
         V_parent = V[i]
@@ -499,6 +532,7 @@ def gravity_wrenches(C, links, gravity):
                f_g]
     """
 
+    global addCount, multCount, trigCount
     n = len(links)
 
     gravity = np.asarray(gravity, dtype=float).reshape(3)
@@ -512,6 +546,7 @@ def gravity_wrenches(C, links, gravity):
         R = C[i][0:3, 0:3]
 
         gravity_body = R.T @ gravity
+        multCount += 1
 
         force = m * gravity_body
         moment = np.cross(d, force)
@@ -562,6 +597,8 @@ def inverse_dynamics(
     tau:
         n-vector of joint generalized forces.
     """
+    global addCount, multCount, trigCount
+
 
     n = len(links)
 
@@ -628,6 +665,8 @@ def inverse_dynamics(
             + W_app[i]
         )
 
+        addCount += 2
+        multCount += 3
         # ---------------------------------------------------------
         # Add wrench transmitted from child.
         #
@@ -647,6 +686,9 @@ def inverse_dynamics(
                 + local_wrench
             )
 
+            addCount += 1
+            multCount += 1
+
     # -------------------------------------------------------------
     # Joint generalized forces
     #
@@ -660,7 +702,7 @@ def inverse_dynamics(
         X_i = links[i][1]
 
         tau[i] = X_i @ W[i]
-
+        multCount += 1
         if include_damping:
             damping_i = links[i][5]
             tau[i] += damping_i * qd[i]

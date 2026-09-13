@@ -4,6 +4,21 @@ import pandas as pd
 import os
 import time
 
+addCount = 0
+multCount = 0
+trigCount = 0
+
+
+def reset_counters():
+    global addCount, multCount, trigCount
+    addCount = 0
+    multCount = 0
+    trigCount = 0
+
+def output_counters():
+    return addCount, multCount, trigCount
+
+
 # ============================================================
 # Equation (14)
 # x = ω × s = Ω s
@@ -61,13 +76,14 @@ def skew(v):
 # ============================================================
 
 def A_i_im1(theta, alpha = 0):
+    global addCount, multCount, trigCount
 
     c = np.cos(theta)
     s = np.sin(theta)
 
     ca = np.cos(alpha)
     sa = np.sin(alpha)
-
+    trigCount += 1
     return np.array([
         [ c, -s*ca,  s*sa],
         [ s,  c*ca, -c*sa],
@@ -95,10 +111,12 @@ def w_i(alpha = 0):
 # ============================================================
 
 def X_i(s_i, a_i, alpha_i = 0):
+    global addCount, multCount, trigCount
 
     ca = np.cos(alpha_i)
     sa = np.sin(alpha_i)
 
+    trigCount += 1
     return np.array([
         [0,             s_i*ca,      -s_i*sa],
         [-s_i*ca,       0,            a_i],
@@ -136,6 +154,7 @@ def gibbs_function(
 ):
 
     G = 0.0
+    global addCount, multCount, trigCount
 
     for i in range(len(links)):
 
@@ -156,6 +175,7 @@ def gibbs_function(
         term1 = np.trace(
             Omd @ J @ Omd.T
         )
+
 
         # ----------------------------------------------------
         # Term 2
@@ -240,6 +260,7 @@ def gibbs_appell_inverse_dynamics(
     links,
     gravity
 ):
+    global addCount, multCount, trigCount
 
     N = len(q)
 
@@ -311,6 +332,7 @@ def gibbs_appell_inverse_dynamics(
     for i in range(1, N+1):
 
         idx = i - 1
+        
 
         theta, alpha, a_i, m_i, J_i, joint_type, b = links[idx]
 
@@ -335,7 +357,9 @@ def gibbs_appell_inverse_dynamics(
             A[i].T @ omega[i-1]
             + w * qd[idx]
         )
-
+        multCount += 1
+        addCount += 1
+ 
         # ----------------------------------------------------
         # Omega matrix
         # ----------------------------------------------------
@@ -351,11 +375,16 @@ def gibbs_appell_inverse_dynamics(
             -Omega[i] @ A[i]
         )
 
+        multCount += 1
+
         omegad[i] = (
             A[i].T @ omegad[i-1]
             + A_dot.T @ omega[i-1]
             + w * qdd[idx]
         )
+
+        multCount += 2
+        addCount += 2
 
         # ----------------------------------------------------
         # Omega_dot
@@ -393,6 +422,8 @@ def gibbs_appell_inverse_dynamics(
             + Xmat @ omegad[i]
             + (Omega[i] @ Omega[i]) @ p
         )
+        multCount += 4
+        addCount += 2
 
     # ========================================================
     # Equation (23)
@@ -451,6 +482,9 @@ def gibbs_appell_inverse_dynamics(
             - J_i
         )
 
+        multCount += 1
+        addCount += 1
+
         # ----------------------------------------------------
         # H_i matrix
         # ----------------------------------------------------
@@ -459,6 +493,9 @@ def gibbs_appell_inverse_dynamics(
             Omega[i] @ J_i
             - J_i @ Omega[i]
         )
+
+        multCount += 2
+        addCount += 1
 
         # ----------------------------------------------------
         # T_i matrix
@@ -477,6 +514,9 @@ def gibbs_appell_inverse_dynamics(
             - m_i * accel[i]
         )
 
+        multCount += 3
+        addCount += 3
+
         # ----------------------------------------------------
         # Equation (36)
         # ----------------------------------------------------
@@ -489,6 +529,8 @@ def gibbs_appell_inverse_dynamics(
             - accel[i] @ G_i
         )
 
+        multCount += 5
+        addCount += 4
         # ----------------------------------------------------
         # Equation (37)
         # ----------------------------------------------------
@@ -496,6 +538,9 @@ def gibbs_appell_inverse_dynamics(
         tau[idx] = (
             -lambd[i] @ w_i(alpha) + b*qd[idx]
         )
+
+        multCount += 1
+        addCount += 1
 
     return (
         tau
