@@ -24,19 +24,20 @@ def show_last_link(torques_le, torques_ne, torques_fst, torques_ham, torques_lie
     plt.show()
 
 if __name__ == "__main__":
-    n = 4
+    n = 20
 
     # out_dir = './ra'
     # out_dir = './ra/data5s'
-    out_dir = './ra/data5s'
+    t_end = 10
+
+    out_dir = f'./ra/data{t_end}s'
 
 
-    t_end = 5
     csv_name_le= f"{out_dir}/torquesLE{n}.csv"
     csv_name_ne= f"{out_dir}/torquesNE{n}.csv"
     csv_name_fst= f"{out_dir}/torquesFst{n}.csv"
     csv_name_gib= f"{out_dir}/torquesGibbs{n}.csv"
-    csv_name_lie = f"{out_dir}/torquesLie_Group{n}.csv"
+    csv_name_lie = f"{out_dir}/torquesLie{n}.csv"
 
     # csv_name_fst= f"{out_dir}/torquesFst{3}.csv"
 

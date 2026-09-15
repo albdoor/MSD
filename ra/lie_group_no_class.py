@@ -270,7 +270,7 @@ def adjoint(C):
 # LINK DATA
 # =============================================================================
 
-def link_data(n, lengths=1.0, masses=1.0, damping=0.0,
+def link_data(n, lengths=1.0, masses=1.0, damping=50.0,
               com_fraction=0.5):
     """
     Generate the link data for an arbitrary n-link planar serial robot.
@@ -877,7 +877,7 @@ if __name__ == "__main__":
     # Number of links
     # -------------------------------------------------------------
 
-    n = 5
+    n = 2
 
     # -------------------------------------------------------------
     # Simulation settings
@@ -887,7 +887,7 @@ if __name__ == "__main__":
 
     time_step = np.linspace(
         0.0,
-        5.0,
+        10,
         time_int
     )
 
@@ -915,7 +915,7 @@ if __name__ == "__main__":
     out_dir = './ra'
 
     trajectory_file = (
-        f"{out_dir}/data5s/"
+        f"{out_dir}/data10s/"
         f"trajectory_data_gen{n}.csv"
     )
 
@@ -1024,7 +1024,7 @@ if __name__ == "__main__":
     # -------------------------------------------------------------
 
     torque_file = (
-        f"{out_dir}/data5s/"
+        f"{out_dir}/data10s/"
         f"torquesLie_Group{n}.csv"
     )
 

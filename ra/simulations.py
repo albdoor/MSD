@@ -46,7 +46,6 @@ if __name__ == "__main__":
         m1 = 1.0
         l1 = 1.0
         g = 9.81
-        t_end = 50
         time_step = np.linspace(0, t_end, t_end * 100)  # Time steps from 0 to t_end*100 seconds
 
         torques = []
