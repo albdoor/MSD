@@ -41,25 +41,32 @@ def graphs(q, qd, qdd, t):
         plt.plot(t, qdd[i, :], label=f'qdd{i+1}')
 
     plt.subplot(3, 1, 1)
-    plt.title('Position vs Time')
-    plt.xlabel('Time (s)')
-    plt.ylabel('Position (rad)')
+    plt.title('Position vs Time', fontsize=18, fontweight='bold')
+    plt.xlabel('Time (s)', fontsize=18, fontweight='bold')
+    plt.ylabel(r'$q$ (rad)', fontsize=18, fontweight='bold')
     plt.legend()
-    plt.grid()
+    plt.grid(True, which='major', linewidth=1.5, alpha=0.8)
+    plt.tick_params(axis='both', which='major', labelsize=20)
+
 
     plt.subplot(3, 1, 2)
-    plt.title('Velocity vs Time')
-    plt.xlabel('Time (s)')
-    plt.ylabel('Velocity (rad/s)')
+    plt.title('Velocity vs Time', fontsize=18, fontweight='bold')
+    plt.xlabel('Time (s)', fontsize=18, fontweight='bold')
+    plt.ylabel(r'$\dot{q}$ (rad/s)', fontsize=18, fontweight='bold')
     plt.legend()
-    plt.grid()
+    plt.grid(True, which='major', linewidth=1.5, alpha=0.8)
+    plt.tick_params(axis='both', which='major', labelsize=20)
+
 
     plt.subplot(3, 1, 3)
-    plt.title('Acceleration vs Time')
-    plt.xlabel('Time (s)')
-    plt.ylabel('Acceleration (rad/s²)')
+    plt.ylim(-5, 5)
+    plt.title('Acceleration vs Time', fontsize=18, fontweight='bold')
+    plt.xlabel('Time (s)', fontsize=18, fontweight='bold')
+    plt.ylabel(r'$\ddot{q}$ (rad/s²)', fontsize=18, fontweight='bold')
     plt.legend()
-    plt.grid()
+    plt.grid(True, which='major', linewidth=1.5, alpha=0.8 )
+    plt.tick_params(axis='both', which='major', labelsize=20)
+
 
     plt.tight_layout()
     plt.show()
@@ -69,7 +76,7 @@ if __name__ == "__main__":
     t_start = 0
     t_end = 10
     n_points = t_end * 100  # 100 points per second
-    n_links = 6  # Number of links
+    n_links = 2  # Number of links
     t = np.linspace(t_start, t_end, n_points)
 
     # Generate trajectory

@@ -32,7 +32,7 @@ from lie_group_no_class import inverse_dynamics as lie_inverse_dynamics, link_da
 
 
 if __name__ == "__main__":
-    t_end = 50
+    t_end = 10
     out_dir = f'./ra/data{t_end}s'
     times_csv = f"{out_dir}/execution_times{t_end}sLie.csv"
 
