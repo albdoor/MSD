@@ -413,3 +413,6 @@ if __name__ == "__main__":
 
     # 12.12
     # Featherstone's general implementation
+
+
+    # run one simulation with 1ms timestep. 5, 10 link 

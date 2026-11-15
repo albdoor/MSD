@@ -33,8 +33,8 @@ from lie_group_no_class import inverse_dynamics as lie_inverse_dynamics, link_da
 
 if __name__ == "__main__":
     t_end = 10
-    out_dir = f'./ra/data{t_end}s'
-    times_csv = f"{out_dir}/execution_times{t_end}sLie.csv"
+    out_dir = f'./data{t_end}s'
+    times_csv = f"{out_dir}/execution_times{t_end}sLie_1000.csv"
 
     if os.path.exists(times_csv):
         existing_df = pd.read_csv(times_csv)
@@ -42,17 +42,17 @@ if __name__ == "__main__":
     else:
         execution_times = []
 
-    for n in range(2, 21):
+    for n in range(2, 11):
         m1 = 1.0
         l1 = 1.0
         g = 9.81
-        time_step = np.linspace(0, t_end, t_end * 100)  # Time steps from 0 to t_end*100 seconds
+        time_step = np.linspace(0, t_end, t_end * 1000)  # Time steps from 0 to t_end*1000 seconds
 
         torques = []
 
         torquesLE = []
 
-        trj_data = f"{out_dir}/trajectory_data_gen{n}.csv"
+        trj_data = f"{out_dir}/trajectory_data_gen{n}_1000.csv"
 
         q_csv, qd_csv, qdd_csv = load_joint_data(trj_data, n, len(time_step), 'csv') # './providedForward/rl_multilink_simulation.csv' './data/LEForw.csv'
         # './providedForwardMod/rl_multilink_simulation2.csv'
@@ -134,45 +134,45 @@ if __name__ == "__main__":
         # df.to_csv(torque_data, index=False)
 
 
-        # print('Performing RLG')
-        # now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        # print(now)
-        # t_total_start = time.perf_counter()
-        # for t_idx in range(len(time_step)): #len(time)
-        #     q = q_csv[t_idx]   # Joint positions from CSV
-        #     qd = qd_csv[t_idx] # Joint velocities from CSV
-        #     qdd = qdd_csv[t_idx] # Joint accelerations from CSV
-        #     torques_rlg.append(recLag(q, qd, qdd, links_rlg, g_rlg))  # Compute torques using RLG
+        print('Performing RLG')
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        print(now)
+        t_total_start = time.perf_counter()
+        for t_idx in range(len(time_step)): #len(time)
+            q = q_csv[t_idx]   # Joint positions from CSV
+            qd = qd_csv[t_idx] # Joint velocities from CSV
+            qdd = qdd_csv[t_idx] # Joint accelerations from CSV
+            torques_rlg.append(recLag(q, qd, qdd, links_rlg, g_rlg))  # Compute torques using RLG
     
      
-        # t_total_end = time.perf_counter()
-        # elapsed = t_total_end - t_total_start
-        # time_elapsed.append(elapsed)
+        t_total_end = time.perf_counter()
+        elapsed = t_total_end - t_total_start
+        time_elapsed.append(elapsed)
 
-        # torques_rlg = np.array(torques_rlg)
+        torques_rlg = np.array(torques_rlg)
 
         
-        # cols = torques_rlg.shape[1] if (hasattr(torques_rlg, "ndim") and torques_rlg.ndim > 1) else 1
-        # data = {f't{i+1}': (torques_rlg[:, i] if cols > 1 else torques_rlg[:]) for i in range(cols)}
+        cols = torques_rlg.shape[1] if (hasattr(torques_rlg, "ndim") and torques_rlg.ndim > 1) else 1
+        data = {f't{i+1}': (torques_rlg[:, i] if cols > 1 else torques_rlg[:]) for i in range(cols)}
 
-        # df = pd.DataFrame(data)
+        df = pd.DataFrame(data)
 
-        # torque_data = f"{out_dir}/torquesLE{n}.csv"
+        torque_data = f"{out_dir}/torquesLE{n}_1000.csv"
 
-        # df.to_csv(torque_data, index=False)
-        # print(f'Completed computations for n={n} joints.')
-        # # print(f'Time taken for FTST: {time_elapsed[0]:.4f} seconds')
-        # # print(f'Time taken for RNEA: {time_elapsed[1]:.4f} seconds')
-        # print(f'Time taken for RLG: {time_elapsed[0]:.4f} seconds')
+        df.to_csv(torque_data, index=False)
+        print(f'Completed computations for n={n} joints.')
+        # print(f'Time taken for FTST: {time_elapsed[0]:.4f} seconds')
+        # print(f'Time taken for RNEA: {time_elapsed[1]:.4f} seconds')
+        print(f'Time taken for RLG: {time_elapsed[0]:.4f} seconds')
 
-        # execution_times.append({
-        #     'num_links': n,
-        #     'le_time': time_elapsed[0]
-        # })            
-        # df_times = pd.DataFrame(execution_times)
-        # times_csv = f"{out_dir}/execution_times50sLE.csv"
-        # df_times.to_csv(times_csv, index=False)
-        # print(f'\nExecution times saved to {times_csv}')
+        execution_times.append({
+            'num_links': n,
+            'le_time': time_elapsed[0]
+        })            
+        df_times = pd.DataFrame(execution_times)
+        times_csv = f"{out_dir}/execution_times10sLE_1000.csv"
+        df_times.to_csv(times_csv, index=False)
+        print(f'\nExecution times saved to {times_csv}')
 
 
         # print('Performing Gibbs-Appell')
@@ -198,7 +198,7 @@ if __name__ == "__main__":
 
         # df = pd.DataFrame(data)
 
-        # torque_data = f"{out_dir}/torquesGibbs{n}.csv"
+        # torque_data = f"{out_dir}/torquesGibbs{n}_1000.csv"
 
         # df.to_csv(torque_data, index=False)
         # print(f'Completed computations for n={n} joints.')
@@ -211,53 +211,54 @@ if __name__ == "__main__":
         #     'gib_time': time_elapsed[0]
         # })            
         # df_times = pd.DataFrame(execution_times)
-        # times_csv = f"{out_dir}/execution_times50sGibbs.csv"
+        # times_csv = f"{out_dir}/execution_times10sGibbs_1000.csv"
         # df_times.to_csv(times_csv, index=False)
         # print(f'\nExecution times saved to {times_csv}')
 
 
 
-        # Performing Lie Group Method
+        # # Performing Lie Group Method
+        # time_elapsed = []
         
-        print('Performing Lie Group Method')
-        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        print(now)
-        t_total_start = time.perf_counter()
-        for t_idx in range(len(time_step)): #len(time)
-            q = q_csv[t_idx]   # Joint positions from CSV
-            qd = qd_csv[t_idx] # Joint velocities from CSV
-            qdd = qdd_csv[t_idx] # Joint accelerations from CSV
-            torques_lie.append(lie_inverse_dynamics(q, qd, qdd, links_lie, g_lie, True))  # Compute torques using Lie Group Method
+        # print('Performing Lie Group Method')
+        # now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        # print(now)
+        # t_total_start = time.perf_counter()
+        # for t_idx in range(len(time_step)): #len(time)
+        #     q = q_csv[t_idx]   # Joint positions from CSV
+        #     qd = qd_csv[t_idx] # Joint velocities from CSV
+        #     qdd = qdd_csv[t_idx] # Joint accelerations from CSV
+        #     torques_lie.append(lie_inverse_dynamics(q, qd, qdd, links_lie, g_lie, True))  # Compute torques using Lie Group Method
     
      
-        t_total_end = time.perf_counter()
-        elapsed = t_total_end - t_total_start
-        time_elapsed.append(elapsed)
+        # t_total_end = time.perf_counter()
+        # elapsed = t_total_end - t_total_start
+        # time_elapsed.append(elapsed)
 
-        torques_lie = np.array(torques_lie)
+        # torques_lie = np.array(torques_lie)
 
         
-        cols = torques_lie.shape[1] if (hasattr(torques_lie, "ndim") and torques_lie.ndim > 1) else 1
-        data = {f't{i+1}': (torques_lie[:, i] if cols > 1 else torques_lie[:]) for i in range(cols)}
+        # cols = torques_lie.shape[1] if (hasattr(torques_lie, "ndim") and torques_lie.ndim > 1) else 1
+        # data = {f't{i+1}': (torques_lie[:, i] if cols > 1 else torques_lie[:]) for i in range(cols)}
 
-        df = pd.DataFrame(data)
+        # df = pd.DataFrame(data)
 
-        torque_data = f"{out_dir}/torquesLie{n}.csv"
+        # torque_data = f"{out_dir}/torquesLie{n}_1000.csv"
 
-        df.to_csv(torque_data, index=False)
-        print(f'Completed computations for n={n} joints.')
-        # print(f'Time taken for FTST: {time_elapsed[0]:.4f} seconds')
-        # print(f'Time taken for RNEA: {time_elapsed[1]:.4f} seconds')
-        print(f'Time taken for Lie Group Method: {time_elapsed[0]:.4f} seconds')
+        # df.to_csv(torque_data, index=False)
+        # print(f'Completed computations for n={n} joints.')
+        # # print(f'Time taken for FTST: {time_elapsed[0]:.4f} seconds')
+        # # print(f'Time taken for RNEA: {time_elapsed[1]:.4f} seconds')
+        # print(f'Time taken for Lie Group Method: {time_elapsed[0]:.4f} seconds')
 
-        execution_times.append({
-            'num_links': n,
-            'lie_time': time_elapsed[0]
-        })            
-        df_times = pd.DataFrame(execution_times)
-        times_csv = f"{out_dir}/execution_times{t_end}sLie.csv"
-        df_times.to_csv(times_csv, index=False)
-        print(f'\nExecution times saved to {times_csv}')
+        # execution_times.append({
+        #     'num_links': n,
+        #     'lie_time': time_elapsed[0]
+        # })            
+        # df_times = pd.DataFrame(execution_times)
+        # times_csv = f"{out_dir}/execution_times{t_end}sLie_1000.csv"
+        # df_times.to_csv(times_csv, index=False)
+        # print(f'\nExecution times saved to {times_csv}')
 # number of additions, multiplications, trigonometric function calls
 
 

@@ -11,8 +11,9 @@ print(os.getcwd())
 
 def show_last_link(torques_le, torques_ne, torques_fst, torques_ham, torques_lie, time, n, zoom_range=None):
     series = [
-        (torques_le[f't{n}'], 'b-', 'Lagrange'),
         (torques_ne[f't{n}'], 'r--', 'Newton-Euler'),
+
+        (torques_le[f't{n}'], 'b-', 'Lagrange'),
         (torques_fst[f't{n}'], 'g-.', 'Featherstone'),
         (torques_ham[f't{n}'], 'm:', 'Gibbs-Appell'),
         (torques_lie[f't{n}'], 'c:', 'Lie Group'),
@@ -57,22 +58,28 @@ def show_last_link(torques_le, torques_ne, torques_fst, torques_ham, torques_lie
     plt.show()
 
 if __name__ == "__main__":
-    n = 20
+    n = 4
 
     # out_dir = './ra'
     # out_dir = './ra/data5s'
     t_end = 10
 
-    out_dir = f'./ra/data{t_end}s'
+    out_dir = f'./data{t_end}s'
 
+
+    # csv_name_le= f"{out_dir}/torquesLE{n}_1000.csv"
+    # csv_name_ne= f"{out_dir}/torquesNE{n}_1000.csv"
+    # csv_name_fst= f"{out_dir}/torquesFst{n}_1000.csv"
+    # csv_name_gib= f"{out_dir}/torquesGibbs{n}_1000.csv"
+    # csv_name_lie = f"{out_dir}/torquesLie{n}_1000.csv"
+
+    # csv_name_fst= f"{out_dir}/torquesFst{3}.csv"
 
     csv_name_le= f"{out_dir}/torquesLE{n}.csv"
     csv_name_ne= f"{out_dir}/torquesNE{n}.csv"
     csv_name_fst= f"{out_dir}/torquesFst{n}.csv"
     csv_name_gib= f"{out_dir}/torquesGibbs{n}.csv"
     csv_name_lie = f"{out_dir}/torquesLie{n}.csv"
-
-    # csv_name_fst= f"{out_dir}/torquesFst{3}.csv"
 
 
 
@@ -101,8 +108,8 @@ if __name__ == "__main__":
     # Plot each joint
     for i in range(n_joints):
         plt.subplot(n_joints, 1, i+1)
-        plt.plot(time, torques_le[f't{i+1}'], 'b-', label='Lagrange', linewidth=lw)
         plt.plot(time, torques_ne[f't{i+1}'], 'r--', label='Newton-Euler', linewidth=lw)
+        plt.plot(time, torques_le[f't{i+1}'], 'b-', label='Lagrange', linewidth=lw)
         plt.plot(time, torques_fst[f't{i+1}'], 'g-.', label='Featherstone', linewidth=lw)
         plt.plot(time, torques_gib[f't{i+1}'], 'm:', label='Gibbs-Appell', linewidth=lw)
         plt.plot(time, torques_lie[f't{i+1}'], 'c:', label='Lie Group', linewidth=lw)
@@ -166,7 +173,7 @@ if __name__ == "__main__":
         
     plt.show()
 
-    if n <= 4:
+    if n <= 10:
         for joint in range(1, n_joints + 1):
             show_last_link(torques_le, torques_ne, torques_fst, torques_gib, torques_lie, time, joint)
     else: 
@@ -180,4 +187,4 @@ if __name__ == "__main__":
     # add 5 link and 6 link comparison
 
 
-# bar charts comp time vs N links
+# bar charts comp time vs N links5

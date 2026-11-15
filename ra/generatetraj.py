@@ -63,8 +63,8 @@ def graphs(q, qd, qdd, t):
 if __name__ == "__main__":
     # Time parameters
     t_start = 0
-    t_end = 10
-    n_points = 1000
+    t_end = 5
+    n_points = t_end * 1000  # 100 points per second
     t = np.linspace(t_start, t_end, n_points)
 
     # Generate trajectory

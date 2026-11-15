@@ -69,7 +69,7 @@ if __name__ == "__main__":
     for n in range(2, 21):
         t_start = 0
         t_end = 10
-        n_points = t_end*100
+        n_points = t_end*1000
         n_links = n  # Number of links
         t = np.linspace(t_start, t_end, n_points)
 
@@ -92,6 +92,6 @@ if __name__ == "__main__":
 
         # Create a pandas DataFrame and save to CSV
         df = pd.DataFrame(data)
-        df.to_csv(f"./ra/data5s/trajectory_data_gen{n_links}.csv", index=False)
+        df.to_csv(f"./data10s/trajectory_data_gen{n_links}_1000.csv", index=False)
         if n==20:
             graphs(q, qd, qdd, t)

@@ -405,7 +405,7 @@ if __name__ == "__main__":
     l1 = 1
     l2 = 1
 
-    n = 4
+    n = 3
 
     # Define the manipulator links: (theta, alpha, length, mass, inertia tensor, joint type: 0 - translational, 1 - rotational, damping coeff.)
     '''
